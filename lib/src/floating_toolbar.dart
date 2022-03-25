@@ -8,12 +8,6 @@ import 'package:floating_toolbar/src/positioners/popup_positioner.dart';
 import 'package:floating_toolbar/src/positioners/toolbar_positioner.dart';
 
 class FloatingToolbar extends StatefulWidget {
-  final ToolbarData toolbarData;
-  final ButtonData toolbarButtonData;
-  final ButtonData popupButtonData;
-  final List<Widget> toolbarButtons;
-  final List<PopupFlex> popupFlexes;
-
   const FloatingToolbar({
     Key? key,
     required this.toolbarData,
@@ -21,7 +15,28 @@ class FloatingToolbar extends StatefulWidget {
     required this.popupButtonData,
     required this.toolbarButtons,
     required this.popupFlexes,
-  }) : super(key: key);
+  })  : assert(
+          toolbarButtons.length == popupFlexes.length,
+          'Each Toolbar Button must be associated with one PopupFlex.',
+        ),
+        super(key: key);
+
+  ///Defines characteristics of the toolbar
+  final ToolbarData toolbarData;
+
+  /// Defines characteristics applied to toolbar buttons
+  final ButtonData toolbarButtonData;
+
+  /// Defines characteristics applied to popup buttons
+  final ButtonData popupButtonData;
+
+  /// The Widgets used in the toolbar. Typically a [BetterIconButton] wrapped
+  /// in a GestureDetector or InkWell
+  final List<Widget> toolbarButtons;
+
+  /// The popups associated with toolbar buttons. [PopupFlex] will typically
+  /// take a list [BetterIconButton] wrapped  in a GestureDetector or InkWell
+  final List<PopupFlex> popupFlexes;
 
   @override
   State<StatefulWidget> createState() => FloatingToolbarState();

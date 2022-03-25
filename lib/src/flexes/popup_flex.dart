@@ -83,21 +83,21 @@ class PopupFlexState extends State<PopupFlex>
             double? height;
             Axis direction;
             switch (toolbarData.alignment) {
-              case ToolbarAlignment.topLeft:
-              case ToolbarAlignment.topCenter:
-              case ToolbarAlignment.topRight:
-              case ToolbarAlignment.bottomLeft:
-              case ToolbarAlignment.bottomCenter:
-              case ToolbarAlignment.bottomRight:
+              case ToolbarAlignment.topLeftHorizontal:
+              case ToolbarAlignment.topCenterHorizontal:
+              case ToolbarAlignment.topRightHorizontal:
+              case ToolbarAlignment.bottomLeftHorizontal:
+              case ToolbarAlignment.bottomCenterHorizontal:
+              case ToolbarAlignment.bottomRightHorizontal:
                 width = buttonData.effectiveWidth;
                 direction = Axis.vertical;
                 break;
-              case ToolbarAlignment.leftTop:
-              case ToolbarAlignment.leftCenter:
-              case ToolbarAlignment.leftBottom:
-              case ToolbarAlignment.rightTop:
-              case ToolbarAlignment.rightCenter:
-              case ToolbarAlignment.rightBottom:
+              case ToolbarAlignment.topLeftVertical:
+              case ToolbarAlignment.centerLeftVertical:
+              case ToolbarAlignment.bottomLeftVertical:
+              case ToolbarAlignment.topRightVertical:
+              case ToolbarAlignment.centerRightVertical:
+              case ToolbarAlignment.bottomRightVertical:
                 height = buttonData.effectiveHeight;
                 direction = Axis.horizontal;
                 break;
