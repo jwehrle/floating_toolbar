@@ -9,50 +9,50 @@ double toolbarOffset({
   double scrollOffset = 0.0,
 }) {
   switch (toolbarData.alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.bottomLeft:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.bottomLeftHorizontal:
       return toolbarData.margin.left +
           toolbarData.contentPadding.left -
           scrollOffset;
-    case ToolbarAlignment.topRight:
-    case ToolbarAlignment.bottomRight:
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.bottomRightHorizontal:
       return toolbarData.margin.right +
           toolbarData.contentPadding.right -
           scrollOffset;
-    case ToolbarAlignment.leftTop:
-    case ToolbarAlignment.rightTop:
+    case ToolbarAlignment.topLeftVertical:
+    case ToolbarAlignment.topRightVertical:
       return toolbarData.margin.top +
           toolbarData.contentPadding.top -
           scrollOffset;
-    case ToolbarAlignment.leftBottom:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.bottomLeftVertical:
+    case ToolbarAlignment.bottomRightVertical:
       return toolbarData.margin.bottom +
           toolbarData.contentPadding.bottom -
           scrollOffset;
-    case ToolbarAlignment.topCenter:
-    case ToolbarAlignment.bottomCenter:
+    case ToolbarAlignment.topCenterHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
       return constraints.maxWidth / 2.0;
-    case ToolbarAlignment.leftCenter:
-    case ToolbarAlignment.rightCenter:
+    case ToolbarAlignment.centerLeftVertical:
+    case ToolbarAlignment.centerRightVertical:
       return constraints.maxHeight / 2.0;
   }
 }
 
 Axis toolbarAxisFromAlignment(ToolbarAlignment alignment) {
   switch (alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.topCenter:
-    case ToolbarAlignment.topRight:
-    case ToolbarAlignment.bottomLeft:
-    case ToolbarAlignment.bottomCenter:
-    case ToolbarAlignment.bottomRight:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topCenterHorizontal:
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
+    case ToolbarAlignment.bottomRightHorizontal:
       return Axis.horizontal;
-    case ToolbarAlignment.leftTop:
-    case ToolbarAlignment.leftCenter:
-    case ToolbarAlignment.leftBottom:
-    case ToolbarAlignment.rightTop:
-    case ToolbarAlignment.rightCenter:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.topLeftVertical:
+    case ToolbarAlignment.centerLeftVertical:
+    case ToolbarAlignment.bottomLeftVertical:
+    case ToolbarAlignment.topRightVertical:
+    case ToolbarAlignment.centerRightVertical:
+    case ToolbarAlignment.bottomRightVertical:
       return Axis.vertical;
   }
 }
@@ -88,38 +88,38 @@ ToolbarAlignment layoutAlignment({
     buttonCount: buttonCount,
   );
   switch (toolbarData.alignment) {
-    case ToolbarAlignment.topLeft:
-      return ToolbarAlignment.topLeft;
-    case ToolbarAlignment.topCenter:
+    case ToolbarAlignment.topLeftHorizontal:
+      return ToolbarAlignment.topLeftHorizontal;
+    case ToolbarAlignment.topCenterHorizontal:
       return toolbarSize > constraints.maxWidth
-          ? ToolbarAlignment.topLeft
-          : ToolbarAlignment.topCenter;
-    case ToolbarAlignment.topRight:
-      return ToolbarAlignment.topRight;
-    case ToolbarAlignment.bottomLeft:
-      return ToolbarAlignment.bottomLeft;
-    case ToolbarAlignment.bottomCenter:
+          ? ToolbarAlignment.topLeftHorizontal
+          : ToolbarAlignment.topCenterHorizontal;
+    case ToolbarAlignment.topRightHorizontal:
+      return ToolbarAlignment.topRightHorizontal;
+    case ToolbarAlignment.bottomLeftHorizontal:
+      return ToolbarAlignment.bottomLeftHorizontal;
+    case ToolbarAlignment.bottomCenterHorizontal:
       return toolbarSize > constraints.maxWidth
-          ? ToolbarAlignment.bottomLeft
-          : ToolbarAlignment.bottomCenter;
-    case ToolbarAlignment.bottomRight:
-      return ToolbarAlignment.bottomRight;
-    case ToolbarAlignment.leftTop:
-      return ToolbarAlignment.leftTop;
-    case ToolbarAlignment.leftCenter:
+          ? ToolbarAlignment.bottomLeftHorizontal
+          : ToolbarAlignment.bottomCenterHorizontal;
+    case ToolbarAlignment.bottomRightHorizontal:
+      return ToolbarAlignment.bottomRightHorizontal;
+    case ToolbarAlignment.topLeftVertical:
+      return ToolbarAlignment.topLeftVertical;
+    case ToolbarAlignment.centerLeftVertical:
       return toolbarSize > constraints.maxHeight
-          ? ToolbarAlignment.leftTop
-          : ToolbarAlignment.leftCenter;
-    case ToolbarAlignment.leftBottom:
-      return ToolbarAlignment.leftBottom;
-    case ToolbarAlignment.rightTop:
-      return ToolbarAlignment.rightTop;
-    case ToolbarAlignment.rightCenter:
+          ? ToolbarAlignment.topLeftVertical
+          : ToolbarAlignment.centerLeftVertical;
+    case ToolbarAlignment.bottomLeftVertical:
+      return ToolbarAlignment.bottomLeftVertical;
+    case ToolbarAlignment.topRightVertical:
+      return ToolbarAlignment.topRightVertical;
+    case ToolbarAlignment.centerRightVertical:
       return toolbarSize > constraints.maxHeight
-          ? ToolbarAlignment.rightTop
-          : ToolbarAlignment.rightCenter;
-    case ToolbarAlignment.rightBottom:
-      return ToolbarAlignment.rightBottom;
+          ? ToolbarAlignment.topRightVertical
+          : ToolbarAlignment.centerRightVertical;
+    case ToolbarAlignment.bottomRightVertical:
+      return ToolbarAlignment.bottomRightVertical;
   }
 }
 
@@ -143,8 +143,8 @@ Positioned positionedItem({
   double horizontalAnchor =
       toolbarButtonData.effectiveWidth + toolbarData.contentPadding.horizontal;
   switch (toolbarData.alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.topCenter:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topCenterHorizontal:
       return Positioned(
         top: verticalAnchor,
         left: offset,
@@ -152,7 +152,7 @@ Positioned positionedItem({
         bottom: null,
         child: child,
       );
-    case ToolbarAlignment.topRight:
+    case ToolbarAlignment.topRightHorizontal:
       return Positioned(
         top: verticalAnchor,
         left: null,
@@ -160,8 +160,8 @@ Positioned positionedItem({
         bottom: null,
         child: child,
       );
-    case ToolbarAlignment.bottomLeft:
-    case ToolbarAlignment.bottomCenter:
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
       return Positioned(
         top: null,
         left: offset,
@@ -169,7 +169,7 @@ Positioned positionedItem({
         bottom: verticalAnchor,
         child: child,
       );
-    case ToolbarAlignment.bottomRight:
+    case ToolbarAlignment.bottomRightHorizontal:
       return Positioned(
         top: null,
         left: null,
@@ -177,8 +177,8 @@ Positioned positionedItem({
         bottom: verticalAnchor,
         child: child,
       );
-    case ToolbarAlignment.leftTop:
-    case ToolbarAlignment.leftCenter:
+    case ToolbarAlignment.topLeftVertical:
+    case ToolbarAlignment.centerLeftVertical:
       return Positioned(
         top: offset,
         left: horizontalAnchor,
@@ -186,7 +186,7 @@ Positioned positionedItem({
         bottom: null,
         child: child,
       );
-    case ToolbarAlignment.leftBottom:
+    case ToolbarAlignment.bottomLeftVertical:
       return Positioned(
         top: null,
         left: horizontalAnchor,
@@ -194,8 +194,8 @@ Positioned positionedItem({
         bottom: offset,
         child: child,
       );
-    case ToolbarAlignment.rightTop:
-    case ToolbarAlignment.rightCenter:
+    case ToolbarAlignment.topRightVertical:
+    case ToolbarAlignment.centerRightVertical:
       return Positioned(
         top: offset,
         left: null,
@@ -203,7 +203,7 @@ Positioned positionedItem({
         bottom: null,
         child: child,
       );
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.bottomRightVertical:
       return Positioned(
         top: null,
         left: null,
@@ -216,19 +216,19 @@ Positioned positionedItem({
 
 bool isReverse(ToolbarAlignment alignment) {
   switch (alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.topCenter:
-    case ToolbarAlignment.bottomLeft:
-    case ToolbarAlignment.bottomCenter:
-    case ToolbarAlignment.leftTop:
-    case ToolbarAlignment.leftCenter:
-    case ToolbarAlignment.rightTop:
-    case ToolbarAlignment.rightCenter:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topCenterHorizontal:
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
+    case ToolbarAlignment.topLeftVertical:
+    case ToolbarAlignment.centerLeftVertical:
+    case ToolbarAlignment.topRightVertical:
+    case ToolbarAlignment.centerRightVertical:
       return false;
-    case ToolbarAlignment.topRight:
-    case ToolbarAlignment.bottomRight:
-    case ToolbarAlignment.leftBottom:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.bottomRightHorizontal:
+    case ToolbarAlignment.bottomLeftVertical:
+    case ToolbarAlignment.bottomRightVertical:
       return true;
   }
 }
@@ -280,8 +280,8 @@ double itemOffset({
 }) {
   assert(index < itemCount, 'Out of range error');
   switch (toolbarData.alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.bottomLeft:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.bottomLeftHorizontal:
       return itemOffsetFromEdge(
         toolbarOffset: toolbarOffset,
         itemsFromEdge: index,
@@ -291,8 +291,8 @@ double itemOffset({
         buttonWidth: buttonData.effectiveWidth,
         buttonHeight: buttonData.effectiveHeight,
       );
-    case ToolbarAlignment.topRight:
-    case ToolbarAlignment.bottomRight:
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.bottomRightHorizontal:
       return itemOffsetFromEdge(
         toolbarOffset: toolbarOffset,
         itemsFromEdge: (itemCount - 1) - index,
@@ -302,8 +302,8 @@ double itemOffset({
         buttonWidth: buttonData.effectiveWidth,
         buttonHeight: buttonData.effectiveHeight,
       );
-    case ToolbarAlignment.leftTop:
-    case ToolbarAlignment.rightTop:
+    case ToolbarAlignment.topLeftVertical:
+    case ToolbarAlignment.topRightVertical:
       return itemOffsetFromEdge(
         toolbarOffset: toolbarOffset,
         itemsFromEdge: index,
@@ -313,8 +313,8 @@ double itemOffset({
         buttonWidth: buttonData.effectiveWidth,
         buttonHeight: buttonData.effectiveHeight,
       );
-    case ToolbarAlignment.leftBottom:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.bottomLeftVertical:
+    case ToolbarAlignment.bottomRightVertical:
       return itemOffsetFromEdge(
         toolbarOffset: toolbarOffset,
         itemsFromEdge: (itemCount - 1) - index,
@@ -324,8 +324,8 @@ double itemOffset({
         buttonWidth: buttonData.effectiveWidth,
         buttonHeight: buttonData.effectiveHeight,
       );
-    case ToolbarAlignment.topCenter:
-    case ToolbarAlignment.bottomCenter:
+    case ToolbarAlignment.topCenterHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
       return itemOffsetFromCenter(
         toolbarOffset: toolbarOffset,
         index: index,
@@ -333,8 +333,8 @@ double itemOffset({
         buttonSize: buttonData.effectiveWidth,
         buttonSpacing: toolbarData.buttonSpacing,
       );
-    case ToolbarAlignment.leftCenter:
-    case ToolbarAlignment.rightCenter:
+    case ToolbarAlignment.centerLeftVertical:
+    case ToolbarAlignment.centerRightVertical:
       return itemOffsetFromCenter(
         toolbarOffset: toolbarOffset,
         index: index,
@@ -347,48 +347,48 @@ double itemOffset({
 
 Alignment convertAlignment(ToolbarAlignment alignment) {
   switch (alignment) {
-    case ToolbarAlignment.bottomCenter:
+    case ToolbarAlignment.bottomCenterHorizontal:
       return Alignment.bottomCenter;
-    case ToolbarAlignment.topCenter:
+    case ToolbarAlignment.topCenterHorizontal:
       return Alignment.topCenter;
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.leftTop:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topLeftVertical:
       return Alignment.topLeft;
-    case ToolbarAlignment.leftCenter:
+    case ToolbarAlignment.centerLeftVertical:
       return Alignment.centerLeft;
-    case ToolbarAlignment.bottomLeft:
-    case ToolbarAlignment.leftBottom:
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomLeftVertical:
       return Alignment.bottomLeft;
-    case ToolbarAlignment.topRight:
-    case ToolbarAlignment.rightTop:
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.topRightVertical:
       return Alignment.topRight;
-    case ToolbarAlignment.rightCenter:
+    case ToolbarAlignment.centerRightVertical:
       return Alignment.centerRight;
-    case ToolbarAlignment.bottomRight:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.bottomRightHorizontal:
+    case ToolbarAlignment.bottomRightVertical:
       return Alignment.bottomRight;
   }
 }
 
 bool tooltipPreferBelow(ToolbarAlignment alignment) {
   switch (alignment) {
-    case ToolbarAlignment.topLeft:
-    case ToolbarAlignment.topCenter:
-    case ToolbarAlignment.topRight:
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topCenterHorizontal:
+    case ToolbarAlignment.topRightHorizontal:
       return true;
-    case ToolbarAlignment.bottomLeft:
-    case ToolbarAlignment.bottomCenter:
-    case ToolbarAlignment.bottomRight:
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomCenterHorizontal:
+    case ToolbarAlignment.bottomRightHorizontal:
       return false;
-    case ToolbarAlignment.leftTop:
+    case ToolbarAlignment.topLeftVertical:
       return true;
-    case ToolbarAlignment.leftCenter:
-    case ToolbarAlignment.leftBottom:
+    case ToolbarAlignment.centerLeftVertical:
+    case ToolbarAlignment.bottomLeftVertical:
       return false;
-    case ToolbarAlignment.rightTop:
+    case ToolbarAlignment.topRightVertical:
       return true;
-    case ToolbarAlignment.rightCenter:
-    case ToolbarAlignment.rightBottom:
+    case ToolbarAlignment.centerRightVertical:
+    case ToolbarAlignment.bottomRightVertical:
       return false;
   }
 }

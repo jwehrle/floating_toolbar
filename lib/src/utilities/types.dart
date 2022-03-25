@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/utilities/operations.dart';
 
+/// Enum of Flutter-supplied ShapeBorders
 enum ButtonShape {
   circle,
   roundedRectangle,
@@ -9,19 +10,20 @@ enum ButtonShape {
   stadium,
 }
 
+/// Single enum combining Alignment and Axis.
 enum ToolbarAlignment {
-  leftTop,
-  leftCenter,
-  leftBottom,
-  topLeft,
-  topCenter,
-  topRight,
-  rightTop,
-  rightCenter,
-  rightBottom,
-  bottomLeft,
-  bottomCenter,
-  bottomRight,
+  topLeftVertical,
+  centerLeftVertical,
+  bottomLeftVertical,
+  topLeftHorizontal,
+  topCenterHorizontal,
+  topRightHorizontal,
+  topRightVertical,
+  centerRightVertical,
+  bottomRightVertical,
+  bottomLeftHorizontal,
+  bottomCenterHorizontal,
+  bottomRightHorizontal,
 }
 
 class ButtonData {
