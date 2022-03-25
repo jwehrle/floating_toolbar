@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/floating_toolbar.dart';
 import 'package:floating_toolbar/src/utilities/utilities.dart';
 
+/// Builds Positioned widget with child based on index, toolbar offset (includes
+/// scroll changes), and ToolbarAlignment.
 class PositionedFollower extends StatelessWidget {
   final int index;
   final int buttonCount;

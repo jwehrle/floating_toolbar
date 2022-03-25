@@ -3,6 +3,8 @@ import 'package:floating_toolbar/src/flexes/button_flex.dart';
 import 'package:floating_toolbar/src/floating_toolbar.dart';
 import 'package:floating_toolbar/src/utilities/types.dart';
 
+/// Wraps a [ButtonFlex] in a [Material] defined by the [ToolbarData] of
+/// [FloatingToolbar] ancestor.
 class ToolbarMaterial extends StatelessWidget {
   final List<Widget> buttons;
 

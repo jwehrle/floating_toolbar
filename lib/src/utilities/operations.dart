@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/utilities/types.dart';
 
+/// Calculates offset of the left edge of the first toolbar button - unless
+/// alignment is centered in which case the center of the space available is
+/// returned.
 double toolbarOffset({
   required ToolbarData toolbarData,
   required BoxConstraints constraints,
@@ -38,6 +41,7 @@ double toolbarOffset({
   }
 }
 
+/// Converts ToolbarAlignment to Axis
 Axis toolbarAxisFromAlignment(ToolbarAlignment alignment) {
   switch (alignment) {
     case ToolbarAlignment.topLeftHorizontal:
@@ -57,6 +61,33 @@ Axis toolbarAxisFromAlignment(ToolbarAlignment alignment) {
   }
 }
 
+/// Converts ToolbarAlignment to Alignment
+Alignment convertAlignment(ToolbarAlignment alignment) {
+  switch (alignment) {
+    case ToolbarAlignment.bottomCenterHorizontal:
+      return Alignment.bottomCenter;
+    case ToolbarAlignment.topCenterHorizontal:
+      return Alignment.topCenter;
+    case ToolbarAlignment.topLeftHorizontal:
+    case ToolbarAlignment.topLeftVertical:
+      return Alignment.topLeft;
+    case ToolbarAlignment.centerLeftVertical:
+      return Alignment.centerLeft;
+    case ToolbarAlignment.bottomLeftHorizontal:
+    case ToolbarAlignment.bottomLeftVertical:
+      return Alignment.bottomLeft;
+    case ToolbarAlignment.topRightHorizontal:
+    case ToolbarAlignment.topRightVertical:
+      return Alignment.topRight;
+    case ToolbarAlignment.centerRightVertical:
+      return Alignment.centerRight;
+    case ToolbarAlignment.bottomRightHorizontal:
+    case ToolbarAlignment.bottomRightVertical:
+      return Alignment.bottomRight;
+  }
+}
+
+/// Calculates the size of the toolbar along its axis.
 double calculateToolbarSize({
   required ToolbarData toolbarData,
   required ButtonData buttonData,
@@ -76,6 +107,9 @@ double calculateToolbarSize({
   return buttonSection + outerPadding + marginSum;
 }
 
+/// Checks that, if a center alignment is selected, there is enough room to show
+/// the entire toolbar. If not, then alignment is changed to top or left
+/// depending upon initial alignment.
 ToolbarAlignment layoutAlignment({
   required BoxConstraints constraints,
   required ToolbarData toolbarData,
@@ -123,6 +157,7 @@ ToolbarAlignment layoutAlignment({
   }
 }
 
+/// Returns a Positioned widget aligned with the index-associated toolbar button
 Positioned positionedItem({
   required int index,
   required double toolbarOffset,
@@ -214,6 +249,8 @@ Positioned positionedItem({
   }
 }
 
+/// Returns true if alignment is from "end", otherwise returns true. User in
+/// Scrollable widgets.
 bool isReverse(ToolbarAlignment alignment) {
   switch (alignment) {
     case ToolbarAlignment.topLeftHorizontal:
@@ -233,6 +270,7 @@ bool isReverse(ToolbarAlignment alignment) {
   }
 }
 
+/// Calculates offset of an item from edge pf toolbar
 double itemOffsetFromEdge({
   required double toolbarOffset,
   required int itemsFromEdge,
@@ -255,6 +293,7 @@ double itemOffsetFromEdge({
   return toolbarOffset;
 }
 
+/// Calculates item offset from center
 double itemOffsetFromCenter({
   required double toolbarOffset,
   required int itemCount,
@@ -271,6 +310,7 @@ double itemOffsetFromCenter({
   return toolbarOffset + offset;
 }
 
+/// Calculates item offset based on toolbar alignment
 double itemOffset({
   required double toolbarOffset,
   required int index,
@@ -345,31 +385,7 @@ double itemOffset({
   }
 }
 
-Alignment convertAlignment(ToolbarAlignment alignment) {
-  switch (alignment) {
-    case ToolbarAlignment.bottomCenterHorizontal:
-      return Alignment.bottomCenter;
-    case ToolbarAlignment.topCenterHorizontal:
-      return Alignment.topCenter;
-    case ToolbarAlignment.topLeftHorizontal:
-    case ToolbarAlignment.topLeftVertical:
-      return Alignment.topLeft;
-    case ToolbarAlignment.centerLeftVertical:
-      return Alignment.centerLeft;
-    case ToolbarAlignment.bottomLeftHorizontal:
-    case ToolbarAlignment.bottomLeftVertical:
-      return Alignment.bottomLeft;
-    case ToolbarAlignment.topRightHorizontal:
-    case ToolbarAlignment.topRightVertical:
-      return Alignment.topRight;
-    case ToolbarAlignment.centerRightVertical:
-      return Alignment.centerRight;
-    case ToolbarAlignment.bottomRightHorizontal:
-    case ToolbarAlignment.bottomRightVertical:
-      return Alignment.bottomRight;
-  }
-}
-
+/// Calculates tooltip field preferBelow based on ToolbarAlignment
 bool tooltipPreferBelow(ToolbarAlignment alignment) {
   switch (alignment) {
     case ToolbarAlignment.topLeftHorizontal:

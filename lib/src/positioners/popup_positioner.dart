@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/flexes/popup_flex.dart';
 import 'package:floating_toolbar/src/positioners/positioned_follower.dart';
 
+/// Builds Stack of [PositionedFollowers] which then build [Positioned] in order
+/// to locate [PopupFlex] over the index-associated toolbar button.
 class PopupPositioner extends StatelessWidget {
   final int buttonCount;
   final List<PopupFlex> children;
