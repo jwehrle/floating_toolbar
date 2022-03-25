@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/floating_toolbar.dart';
-import 'package:floating_toolbar/utilities/types.dart';
+import 'package:floating_toolbar/src/floating_toolbar.dart';
+import 'package:floating_toolbar/src/utilities/types.dart';
 
 class PopupFlex extends StatefulWidget {
   final String itemKey;

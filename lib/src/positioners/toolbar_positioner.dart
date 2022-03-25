@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/floating_toolbar.dart';
-import 'package:floating_toolbar/flexes/toolbar_material.dart';
-import 'package:floating_toolbar/utilities/utilities.dart';
+import 'package:floating_toolbar/src/floating_toolbar.dart';
+import 'package:floating_toolbar/src/flexes/toolbar_material.dart';
+import 'package:floating_toolbar/src/utilities/utilities.dart';
 
 class ToolbarPositioner extends StatelessWidget {
   final ScrollController scrollController;

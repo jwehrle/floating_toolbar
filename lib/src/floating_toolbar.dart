@@ -2,10 +2,10 @@ library floating_toolbar;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:floating_toolbar/flexes/popup_flex.dart';
-import 'package:floating_toolbar/utilities/utilities.dart';
-import 'package:floating_toolbar/positioners/popup_positioner.dart';
-import 'package:floating_toolbar/positioners/toolbar_positioner.dart';
+import 'package:floating_toolbar/src/flexes/popup_flex.dart';
+import 'package:floating_toolbar/src/utilities/utilities.dart';
+import 'package:floating_toolbar/src/positioners/popup_positioner.dart';
+import 'package:floating_toolbar/src/positioners/toolbar_positioner.dart';
 
 class FloatingToolbar extends StatefulWidget {
   final ToolbarData toolbarData;

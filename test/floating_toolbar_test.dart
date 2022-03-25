@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:floating_toolbar/floating_toolbar.dart';
+import 'package:floating_toolbar/src/floating_toolbar.dart';
 
 void main() {
   // test('adds one to input values', () {

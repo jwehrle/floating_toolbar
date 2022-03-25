@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/utilities/operations.dart';
+import 'package:floating_toolbar/src/utilities/operations.dart';
 
 enum ButtonShape {
   circle,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/flexes/popup_flex.dart';
-import 'package:floating_toolbar/positioners/positioned_follower.dart';
+import 'package:floating_toolbar/src/flexes/popup_flex.dart';
+import 'package:floating_toolbar/src/positioners/positioned_follower.dart';
 
 class PopupPositioner extends StatelessWidget {
   final int buttonCount;

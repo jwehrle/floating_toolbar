@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/flexes/button_flex.dart';
-import 'package:floating_toolbar/floating_toolbar.dart';
-import 'package:floating_toolbar/utilities/types.dart';
+import 'package:floating_toolbar/src/flexes/button_flex.dart';
+import 'package:floating_toolbar/src/floating_toolbar.dart';
+import 'package:floating_toolbar/src/utilities/types.dart';
 
 class ToolbarMaterial extends StatelessWidget {
   final List<Widget> buttons;
