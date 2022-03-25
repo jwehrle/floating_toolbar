@@ -3,6 +3,7 @@ import 'package:floating_toolbar/src/floating_toolbar.dart';
 import 'package:floating_toolbar/src/flexes/toolbar_material.dart';
 import 'package:floating_toolbar/src/utilities/utilities.dart';
 
+/// Positions [ToolbarMaterial] relative to ToolbarAlignment.
 class ToolbarPositioner extends StatelessWidget {
   final ScrollController scrollController;
   final List<Widget> children;

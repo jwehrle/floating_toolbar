@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/floating_toolbar.dart';
 import 'package:floating_toolbar/src/utilities/utilities.dart';
 
+/// Builds toolbar buttons with spacing and axis from [ToolbarData] of
+/// [FloatingToolbar] ancestor.
 class ButtonFlex extends StatelessWidget {
   final List<Widget> buttons;
 

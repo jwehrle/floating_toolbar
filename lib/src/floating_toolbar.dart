@@ -7,6 +7,16 @@ import 'package:floating_toolbar/src/utilities/utilities.dart';
 import 'package:floating_toolbar/src/positioners/popup_positioner.dart';
 import 'package:floating_toolbar/src/positioners/toolbar_positioner.dart';
 
+/// Toolbar that aligns to any edge (left, top, right, bottom) with buttons that
+/// displays popup buttons above, to the side of, or below the selected toolbar
+/// button. FloatingToolbar is also Scrollable and minutely customizable in
+/// terms of shapes, colors, highlights, etc.
+///
+/// The purpose of this Widget is to solve the UX problem of too many buttons
+/// on a toolbar such that the user cannot be expected to either know what
+/// the toolbar contains or that it scrolls or where the feature they're
+/// looking for is. [FloatingToolbar] enables functional organization of buttons
+/// that can be shown or hidden by user in an intuitive manner.
 class FloatingToolbar extends StatefulWidget {
   const FloatingToolbar({
     Key? key,

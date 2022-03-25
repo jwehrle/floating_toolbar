@@ -26,6 +26,7 @@ enum ToolbarAlignment {
   bottomRightHorizontal,
 }
 
+/// Encapsulates button parameters into an object.
 class ButtonData {
   ButtonData({
     required this.accentColor,
@@ -154,6 +155,7 @@ class ButtonData {
   }
 }
 
+/// Encapsulates toolbar parameters into an object
 class ToolbarData {
   ToolbarData({
     required this.alignment,

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:floating_toolbar/src/floating_toolbar.dart';
 import 'package:floating_toolbar/src/utilities/types.dart';
 
+/// Builds popup buttons associated with itemKey. Listens to
+/// [FloatingToolbar$selectionNotifier] and displays buttons iff selection
+/// equals itemKey. Transitions are animated with [ScaleTransition].
 class PopupFlex extends StatefulWidget {
   final String itemKey;
   final List<Widget> buttons;
@@ -70,15 +73,12 @@ class PopupFlexState extends State<PopupFlex>
         return ValueListenableBuilder<ToolbarData>(
           valueListenable: _toolbar.toolbarDataNotifier,
           builder: (context, toolbarData, _) {
-            List<Widget> children = [];
-            widget.buttons.forEach((option) {
-              children.add(
-                ScaleTransition(
-                  scale: _controller.view,
-                  child: option,
-                ),
-              );
-            });
+            List<Widget> children = widget.buttons
+                .map((b) => ScaleTransition(
+                      scale: _controller.view,
+                      child: b,
+                    ))
+                .toList();
             double? width;
             double? height;
             Axis direction;
