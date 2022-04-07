@@ -1,5 +1,5 @@
 export 'src/floating_toolbar.dart';
 export 'src/utilities/types.dart';
-export 'src/utilities/operations.dart';
-export 'src/buttons/better_icon_button.dart';
-export 'src/flexes/popup_flex.dart';
+export 'src/widgets/button_tile.dart';
+export 'src/widgets/popup_list.dart';
+export 'src/widgets/toolbar_button.dart';
