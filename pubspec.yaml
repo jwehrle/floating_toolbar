@@ -3,6 +3,8 @@ description: A new Flutter project.
 version: 0.0.1
 homepage:
 
+publish_to: none
+
 environment:
   sdk: ">=2.12.0 <3.0.0"
   flutter: ">=1.17.0"
@@ -10,6 +12,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
+  iconic_button:
+    git:
+      url: https://github.com/jwehrle/iconic_button.git
 
 dev_dependencies:
   flutter_test:

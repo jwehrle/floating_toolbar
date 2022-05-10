@@ -60,6 +60,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  iconic_button:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "50782269301279101fbf125e2ae2d60c9a5d6141"
+      url: "https://github.com/jwehrle/iconic_button.git"
+    source: git
+    version: "0.0.1"
   matcher:
     dependency: transitive
     description:
