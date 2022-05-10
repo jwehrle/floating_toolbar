@@ -43,8 +43,8 @@ class FloatingToolbarItem {
     return _toolbarItem!;
   }
 
-  final List<IconicItem>? _popups;
-  List<IconicItem> get popups {
+  final List<IconicButton>? _popups;
+  List<IconicButton> get popups {
     assert(!isCustom);
     return _popups!;
   }
@@ -109,7 +109,6 @@ class FloatingToolbar extends StatefulWidget {
     this.tooltipOffset,
     this.preferTooltipBelow,
     this.toolbarStyle,
-    this.popupStyle,
   }) : super(key: key);
 
   /// The location of the toolbar. The first direction indicates alignment along
@@ -164,9 +163,6 @@ class FloatingToolbar extends StatefulWidget {
 
   /// The ButtonStyle applied to IconicButtons of the toolbar.
   final ButtonStyle? toolbarStyle;
-
-  /// The ButtonStyle applied to IconicButtons of popups.
-  final ButtonStyle? popupStyle;
 
   @override
   State<StatefulWidget> createState() => FloatingToolbarState();
@@ -229,18 +225,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     );
   }
 
-  IconicButton _popupButtonFromItem(IconicItem item) {
-    return IconicButton(
-      iconData: item.iconData,
-      onPressed: item.onPressed,
-      style: widget.popupStyle,
-      label: item.label,
-      tooltip: item.tooltip,
-      tooltipOffset: widget.tooltipOffset,
-      preferTooltipBelow: widget.preferTooltipBelow,
-    );
-  }
-
   /// Wraps [FloatingToolbarItem] of parent in [CompositedTransformTarget] and
   /// [CompositedTransformFollower] and [IconicButton]. Saves [GlobalKey] of
   /// each toolbar button in [_toolMap] and a [GlobalKey] for each [Popup] in
@@ -278,7 +262,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
               targetAnchor: targetAnchor,
               followerAnchor: followerAnchor,
               offset: followerOffset,
-              buttons: item.popups.map(_popupButtonFromItem).toList(),
+              buttons: item.popups,
             ),
           ),
         );

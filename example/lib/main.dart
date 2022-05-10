@@ -139,10 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
             FloatingToolbar(
               items: buttons,
               preferTooltipBelow: false,
-              popupStyle: buttonStyleFrom(
-                elevation: 4.0,
-                shape: CircleBorder(),
-              ),
               alignment: ToolbarAlignment.bottomCenterHorizontal,
               margin: EdgeInsets.all(4.0),
               contentPadding: EdgeInsets.all(4.0),
@@ -222,9 +218,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  List<IconicItem> _popupList(int index) {
+  List<IconicButton> _popupList(int index) {
     int num = 2 + (index % (3));
-    List<IconicItem> buttons = [];
+    List<IconicButton> buttons = [];
     for (int i = 0; i < num; i++) {
       buttons.add(_popup());
     }
@@ -233,9 +229,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _loremIndex = 0;
 
-  IconicItem _popup() {
-    return IconicItem(
+  IconicButton _popup() {
+    return IconicButton(
       iconData: Icons.tag_faces,
+      style: buttonStyleFrom(
+        elevation: 4.0,
+        shape: CircleBorder(),
+      ),
       onPressed: () {
         String text = lorem[_loremIndex % lorem.length];
         ScaffoldMessenger.of(context)
@@ -252,6 +252,8 @@ class _MyHomePageState extends State<MyHomePage> {
             .closed
             .then((value) => setState(() => _loremIndex++));
       },
+      preferTooltipBelow: false,
+      tooltip: 'Popup tooltip!',
     );
   }
 }
