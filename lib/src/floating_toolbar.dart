@@ -438,13 +438,21 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     );
     _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
     _selectionNotifier.addListener(_selectionListener);
-    SchedulerBinding.instance?.addPersistentFrameCallback((timeStamp) {
-      // In case this callback fires more than once - which can happen
-      if (!_entriesInserted) {
-        Overlay.of(context)?.insertAll(_entries);
-        _entriesInserted = true;
-      }
-    });
+    if (SchedulerBinding.instance?.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      print('Scheduler phase == persistentCallbacks');
+      SchedulerBinding.instance?.addPostFrameCallback(_insertPopups);
+    } else {
+      print('Scheduler phase does not == persistentCallbacks');
+      WidgetsBinding.instance?.addPostFrameCallback(_insertPopups);
+    }
+  }
+
+  void _insertPopups([Duration? _]) {
+    if (!_entriesInserted) {
+      Overlay.of(context)?.insertAll(_entries);
+      _entriesInserted = true;
+    }
   }
 
   @override
