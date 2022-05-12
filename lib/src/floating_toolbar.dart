@@ -429,22 +429,24 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
     }
-    final List<Widget> targets = _makeComposited(
-      direction: popupDirection,
-      spacing: popupSpacing,
-      targetAnchor: targetAnchor,
-      followerAnchor: followerAnchor,
-      followerOffset: followerOffset,
-    );
-    _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
-    _selectionNotifier.addListener(_selectionListener);
-    if (SchedulerBinding.instance?.schedulerPhase ==
-        SchedulerPhase.persistentCallbacks) {
-      print('Scheduler phase == persistentCallbacks');
-      SchedulerBinding.instance?.addPostFrameCallback(_insertPopups);
-    } else {
-      print('Scheduler phase does not == persistentCallbacks');
-      WidgetsBinding.instance?.addPostFrameCallback(_insertPopups);
+    if (!_entriesInserted) {
+      final List<Widget> targets = _makeComposited(
+        direction: popupDirection,
+        spacing: popupSpacing,
+        targetAnchor: targetAnchor,
+        followerAnchor: followerAnchor,
+        followerOffset: followerOffset,
+      );
+      _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
+      _selectionNotifier.addListener(_selectionListener);
+      if (SchedulerBinding.instance?.schedulerPhase ==
+          SchedulerPhase.persistentCallbacks) {
+        print('Scheduler phase == persistentCallbacks');
+        SchedulerBinding.instance?.addPostFrameCallback(_insertPopups);
+      } else {
+        print('Scheduler phase does not == persistentCallbacks');
+        WidgetsBinding.instance?.addPostFrameCallback(_insertPopups);
+      }
     }
   }
 
