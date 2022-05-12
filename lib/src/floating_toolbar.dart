@@ -287,15 +287,17 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     }
   }
 
+  late final Axis popupDirection;
+  late final EdgeInsets buttonSpacing;
+  late final EdgeInsets popupSpacing;
+  late final Alignment targetAnchor;
+  late final Alignment followerAnchor;
+  late final Offset followerOffset;
+
   @override
   void initState() {
     super.initState();
-    final Axis popupDirection;
-    final EdgeInsets buttonSpacing;
-    final EdgeInsets popupSpacing;
-    final Alignment targetAnchor;
-    final Alignment followerAnchor;
-    final Offset followerOffset;
+
     switch (widget.alignment) {
       case ToolbarAlignment.topLeftVertical:
         _toolbarAlignment = Alignment.topLeft;
@@ -430,6 +432,17 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
     }
+  }
+
+  void _insertPopups(entries) {
+    if (!_entriesInserted) {
+      Overlay.of(context)?.insertAll(entries);
+      _entriesInserted = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     if (!_entriesInserted) {
       final List<OverlayEntry> entries = [];
       final List<Widget> targets = _makeComposited(
@@ -445,17 +458,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
       WidgetsBinding.instance
           ?.addPostFrameCallback((_) => _insertPopups(entries));
     }
-  }
-
-  void _insertPopups(entries) {
-    if (!_entriesInserted) {
-      Overlay.of(context)?.insertAll(entries);
-      _entriesInserted = true;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Align(
       alignment: _toolbarAlignment,
       child: SingleChildScrollView(
