@@ -175,7 +175,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   final List<Widget> _toolbarButtons = [];
   final Map<String, GlobalKey<IconicButtonState>> _toolMap = {};
   final Map<String, GlobalKey<PopupState>> _popMap = {};
-  final List<OverlayEntry> _entries = [];
+  // final List<OverlayEntry> _entries = [];
   bool _entriesInserted = false;
   late final Alignment _toolbarAlignment;
   late final bool _isToolbarReverse;
@@ -235,6 +235,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     required Alignment targetAnchor,
     required Alignment followerAnchor,
     required Offset followerOffset,
+    required List<OverlayEntry> entries,
   }) {
     final List<Widget> targets = [];
     widget.items.forEach((item) {
@@ -251,7 +252,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         );
         final popupKey = GlobalKey<PopupState>();
         _popMap[item.itemKey] = popupKey;
-        _entries.add(
+        entries.add(
           OverlayEntry(
             builder: (context) => Popup(
               key: popupKey,
@@ -430,29 +431,25 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         break;
     }
     if (!_entriesInserted) {
+      final List<OverlayEntry> entries = [];
       final List<Widget> targets = _makeComposited(
         direction: popupDirection,
         spacing: popupSpacing,
         targetAnchor: targetAnchor,
         followerAnchor: followerAnchor,
         followerOffset: followerOffset,
+        entries: entries,
       );
       _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
       _selectionNotifier.addListener(_selectionListener);
-      if (SchedulerBinding.instance?.schedulerPhase ==
-          SchedulerPhase.persistentCallbacks) {
-        print('Scheduler phase == persistentCallbacks');
-        SchedulerBinding.instance?.addPostFrameCallback(_insertPopups);
-      } else {
-        print('Scheduler phase does not == persistentCallbacks');
-        WidgetsBinding.instance?.addPostFrameCallback(_insertPopups);
-      }
+      WidgetsBinding.instance
+          ?.addPostFrameCallback((_) => _insertPopups(entries));
     }
   }
 
-  void _insertPopups([Duration? _]) {
+  void _insertPopups(entries) {
     if (!_entriesInserted) {
-      Overlay.of(context)?.insertAll(_entries);
+      Overlay.of(context)?.insertAll(entries);
       _entriesInserted = true;
     }
   }
@@ -490,7 +487,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   @override
   void dispose() {
     _selectionNotifier.dispose();
-    _entries.forEach((entry) => entry.remove());
+    // _entries.forEach((entry) => entry.remove());
     super.dispose();
   }
 }
