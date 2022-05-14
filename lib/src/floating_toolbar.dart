@@ -168,13 +168,16 @@ class FloatingToolbar extends StatefulWidget {
   State<StatefulWidget> createState() => FloatingToolbarState();
 }
 
-class FloatingToolbarState extends State<FloatingToolbar> {
+class FloatingToolbarState extends State<FloatingToolbar>
+    with TickerProviderStateMixin {
   /// Stores currently selected itemKey or null if none is selected.
   final ValueNotifier<String?> _selectionNotifier = ValueNotifier(null);
 
   final List<Widget> _toolbarButtons = [];
-  final Map<String, GlobalKey<IconicButtonState>> _toolMap = {};
-  final Map<String, GlobalKey<PopupState>> _popMap = {};
+  final Map<String, IconicController> _toolMap = {};
+  final Map<String, PopupController> _popMap = {};
+  final List<Widget> popups = [];
+  List<Widget> targets = [];
   // final List<OverlayEntry> _entries = [];
   bool _entriesInserted = false;
   late final Alignment _toolbarAlignment;
@@ -184,17 +187,17 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   void _selectionListener() {
     final String? itemKey = _selectionNotifier.value;
     _toolMap.forEach((key, value) {
-      final tool = _toolMap[key]?.currentState;
-      if (tool != null) {
+      final controller = _toolMap[key];
+      if (controller != null) {
         if (key == itemKey) {
-          tool.select();
+          controller.update(add: {MaterialState.selected});
         } else {
-          tool.unSelect();
+          controller.update(remove: {MaterialState.selected});
         }
       }
     });
     _popMap.forEach((key, popup) {
-      final pop = _popMap[key]?.currentState;
+      final pop = _popMap[key];
       if (pop != null) {
         if (key == itemKey) {
           pop.select();
@@ -205,41 +208,22 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     });
   }
 
-  IconicButton _toolbarButtonFromItem(FloatingToolbarItem item) {
-    return IconicButton(
-      key: _toolMap[item.itemKey],
-      iconData: item.toolbarItem.iconData,
-      onPressed: () {
-        _selectionNotifier.value =
-            _selectionNotifier.value == item.itemKey ? null : item.itemKey;
-        item.toolbarItem.onPressed();
-        if (widget.onValueChanged != null) {
-          widget.onValueChanged!(item.itemKey);
-        }
-      },
-      label: item.toolbarItem.label,
-      tooltip: item.toolbarItem.tooltip,
-      style: widget.toolbarStyle,
-      tooltipOffset: widget.tooltipOffset,
-      preferTooltipBelow: widget.preferTooltipBelow,
-    );
-  }
-
   /// Wraps [FloatingToolbarItem] of parent in [CompositedTransformTarget] and
   /// [CompositedTransformFollower] and [IconicButton]. Saves [GlobalKey] of
   /// each toolbar button in [_toolMap] and a [GlobalKey] for each [Popup] in
   /// [_popMap]. Returns the list of [CompositedTransformTarget].
-  List<Widget> _makeComposited({
+  void _makeComposited({
     required Axis direction,
     required EdgeInsets spacing,
     required Alignment targetAnchor,
     required Alignment followerAnchor,
     required Offset followerOffset,
-    required List<OverlayEntry> entries,
+    required List<Widget> targets,
+    required List<Widget> popups,
   }) {
-    final List<Widget> targets = [];
+    print('Make Composited called');
     widget.items.forEach((item) {
-      _toolMap[item.itemKey] = GlobalKey<IconicButtonState>();
+      _toolMap[item.itemKey] = IconicController();
       final LayerLink link = LayerLink();
       if (item.isCustom) {
         targets.add(item.customButton);
@@ -247,29 +231,41 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         targets.add(
           CompositedTransformTarget(
             link: link,
-            child: _toolbarButtonFromItem(item),
-          ),
-        );
-        final popupKey = GlobalKey<PopupState>();
-        _popMap[item.itemKey] = popupKey;
-        entries.add(
-          OverlayEntry(
-            builder: (context) => Popup(
-              key: popupKey,
-              itemKey: item.itemKey,
-              link: link,
-              direction: direction,
-              spacing: spacing,
-              targetAnchor: targetAnchor,
-              followerAnchor: followerAnchor,
-              offset: followerOffset,
-              buttons: item.popups,
+            child: IconicButton(
+              controller: _toolMap[item.itemKey]!,
+              iconData: item.toolbarItem.iconData,
+              onPressed: () {
+                _selectionNotifier.value =
+                    _selectionNotifier.value == item.itemKey
+                        ? null
+                        : item.itemKey;
+                item.toolbarItem.onPressed();
+                if (widget.onValueChanged != null) {
+                  widget.onValueChanged!(item.itemKey);
+                }
+              },
+              label: item.toolbarItem.label,
+              tooltip: item.toolbarItem.tooltip,
+              style: widget.toolbarStyle,
+              tooltipOffset: widget.tooltipOffset,
+              preferTooltipBelow: widget.preferTooltipBelow,
             ),
           ),
         );
+        _popMap[item.itemKey] = PopupController(vsync: this);
+        popups.add(Popup(
+          controller: _popMap[item.itemKey]!,
+          itemKey: item.itemKey,
+          link: link,
+          direction: direction,
+          spacing: spacing,
+          targetAnchor: targetAnchor,
+          followerAnchor: followerAnchor,
+          offset: followerOffset,
+          buttons: item.popups,
+        ));
       }
     });
-    return targets;
   }
 
   void _assignToolbarButtons({
@@ -297,7 +293,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   @override
   void initState() {
     super.initState();
-
     switch (widget.alignment) {
       case ToolbarAlignment.topLeftVertical:
         _toolbarAlignment = Alignment.topLeft;
@@ -432,70 +427,344 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
     }
+    _makeComposited(
+      direction: popupDirection,
+      spacing: popupSpacing,
+      targetAnchor: targetAnchor,
+      followerAnchor: followerAnchor,
+      followerOffset: followerOffset,
+      targets: targets,
+      popups: popups,
+    );
+    _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
+    _selectionNotifier.addListener(_selectionListener);
   }
 
-  void _insertPopups(entries) {
-    if (!_entriesInserted) {
-      Overlay.of(context)?.insertAll(entries);
-      _entriesInserted = true;
-    }
-  }
+  // void _insertPopups(entries) {
+  //   if (!_entriesInserted) {
+  //     Overlay.of(context)?.insertAll(entries);
+  //     _entriesInserted = true;
+  //   }
+  // }
+
+  // @override
+  // void didUpdateWidget(covariant FloatingToolbar oldWidget) {
+  //   super.didUpdateWidget(oldWidget);
+  //   targets.clear();
+  //   popups.clear();
+  //   _popMap.clear();
+  //   _toolMap.clear();
+  //   _makeComposited(
+  //     direction: popupDirection,
+  //     spacing: popupSpacing,
+  //     targetAnchor: targetAnchor,
+  //     followerAnchor: followerAnchor,
+  //     followerOffset: followerOffset,
+  //     targets: targets,
+  //     popups: popups,
+  //   );
+  //   _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
+  // }
 
   @override
   Widget build(BuildContext context) {
-    if (!_entriesInserted) {
-      final List<OverlayEntry> entries = [];
-      final List<Widget> targets = _makeComposited(
-        direction: popupDirection,
-        spacing: popupSpacing,
-        targetAnchor: targetAnchor,
-        followerAnchor: followerAnchor,
-        followerOffset: followerOffset,
-        entries: entries,
-      );
-      _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
-      _selectionNotifier.addListener(_selectionListener);
-      WidgetsBinding.instance
-          ?.addPostFrameCallback((_) => _insertPopups(entries));
-    }
-    return Align(
-      alignment: _toolbarAlignment,
-      child: SingleChildScrollView(
-        scrollDirection: _toolbarDirection,
-        reverse: _isToolbarReverse,
-        clipBehavior: Clip.none,
-        child: Padding(
-          padding: widget.margin,
-          child: Material(
-            shape: widget.shape,
-            color: widget.backgroundColor ?? Theme.of(context).primaryColor,
-            clipBehavior: widget.clip,
-            elevation: widget.elevation,
-            child: Padding(
-              padding: widget.contentPadding,
-              child: Flex(
-                direction: _toolbarDirection,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: _toolbarButtons,
+    // return _ToolbarElements(
+    //   popups: popups,
+    //   alignment: _toolbarAlignment,
+    //   isReverse: _isToolbarReverse,
+    //   direction: _toolbarDirection,
+    //   margin: widget.margin,
+    //   shape: widget.shape,
+    //   color: widget.backgroundColor ?? Theme.of(context).primaryColor,
+    //   clip: widget.clip,
+    //   elevation: widget.elevation,
+    //   contentPadding: widget.contentPadding,
+    //   buttons: _toolbarButtons,
+    // );
+    // print(popups.map((e) => e.key).toList().toString());
+    List<Widget> children = [
+      Align(
+        alignment: _toolbarAlignment,
+        child: SingleChildScrollView(
+          scrollDirection: _toolbarDirection,
+          reverse: _isToolbarReverse,
+          clipBehavior: Clip.none,
+          child: Padding(
+            padding: widget.margin,
+            child: Material(
+              shape: widget.shape,
+              color: widget.backgroundColor ?? Theme.of(context).primaryColor,
+              clipBehavior: widget.clip,
+              elevation: widget.elevation,
+              child: Padding(
+                padding: widget.contentPadding,
+                child: Flex(
+                  direction: _toolbarDirection,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: _toolbarButtons,
+                ),
               ),
             ),
           ),
         ),
       ),
+    ];
+    children.addAll(popups);
+    return Stack(
+      children: children,
     );
   }
 
   @override
   void dispose() {
     _selectionNotifier.dispose();
-    // _entries.forEach((entry) => entry.remove());
+    _toolMap.values.forEach((element) => element.dispose());
+    _popMap.values.forEach((element) => element.dispose());
     super.dispose();
   }
 }
 
-class Popup extends StatefulWidget {
+// class _ToolbarElements extends StatelessWidget {
+//   final List<FloatingToolbarItem> items;
+//   final ToolbarAlignment toolbarAlignment;
+//   late final Alignment alignment;
+//   late final bool isReverse;
+//   late final Axis toolbarDirection;
+//   late final Axis popupDirection;
+//   late final EdgeInsetsGeometry buttonSpacing;
+//   late final EdgeInsetsGeometry popupSpacing;
+//   late final Alignment targetAnchor;
+//   late final Alignment followerAnchor;
+//   late final Offset followerOffset;
+//
+//   final EdgeInsetsGeometry margin;
+//   final ShapeBorder shape;
+//   final Color color;
+//   final Clip clip;
+//   final double elevation;
+//   final EdgeInsets contentPadding;
+//   final List<Widget> buttons;
+//
+//   _ToolbarElements({
+//     Key? key,
+//     required this.items,
+//     required this.toolbarAlignment,
+//     required double toolbarButtonSpacing,
+//     required double popupButtonSpacing,
+//     required this.margin,
+//     required this.shape,
+//     required this.color,
+//     required this.clip,
+//     required this.elevation,
+//     required this.contentPadding,
+//     required this.buttons,
+//   }) : super(key: key) {
+//     switch (toolbarAlignment) {
+//       case ToolbarAlignment.topLeftVertical:
+//         alignment = Alignment.topLeft;
+//         isReverse = false;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(left: popupButtonSpacing);
+//         targetAnchor = Alignment.centerRight;
+//         followerAnchor = Alignment.centerLeft;
+//         followerOffset = Offset(contentPadding.right, 0.0);
+//         break;
+//       case ToolbarAlignment.centerLeftVertical:
+//         alignment = Alignment.centerLeft;
+//         isReverse = false;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(left: popupButtonSpacing);
+//         targetAnchor = Alignment.centerRight;
+//         followerAnchor = Alignment.centerLeft;
+//         followerOffset = Offset(contentPadding.right, 0.0);
+//         break;
+//       case ToolbarAlignment.bottomLeftVertical:
+//         alignment = Alignment.bottomLeft;
+//         isReverse = true;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(left: popupButtonSpacing);
+//         targetAnchor = Alignment.centerRight;
+//         followerAnchor = Alignment.centerLeft;
+//         followerOffset = Offset(contentPadding.right, 0.0);
+//         break;
+//       case ToolbarAlignment.topLeftHorizontal:
+//         alignment = Alignment.topLeft;
+//         isReverse = false;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(top: popupButtonSpacing);
+//         targetAnchor = Alignment.bottomCenter;
+//         followerAnchor = Alignment.topCenter;
+//         followerOffset = Offset(0.0, contentPadding.bottom);
+//         break;
+//       case ToolbarAlignment.topCenterHorizontal:
+//         alignment = Alignment.topCenter;
+//         isReverse = false;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(top: popupButtonSpacing);
+//         targetAnchor = Alignment.bottomCenter;
+//         followerAnchor = Alignment.topCenter;
+//         followerOffset = Offset(0.0, contentPadding.bottom);
+//         break;
+//       case ToolbarAlignment.topRightHorizontal:
+//         alignment = Alignment.topRight;
+//         isReverse = true;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(top: popupButtonSpacing);
+//         targetAnchor = Alignment.bottomCenter;
+//         followerAnchor = Alignment.topCenter;
+//         followerOffset = Offset(0.0, contentPadding.bottom);
+//         break;
+//       case ToolbarAlignment.topRightVertical:
+//         alignment = Alignment.topRight;
+//         isReverse = false;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(right: popupButtonSpacing);
+//         targetAnchor = Alignment.centerLeft;
+//         followerAnchor = Alignment.centerRight;
+//         followerOffset = Offset(-contentPadding.left, 0.0);
+//         break;
+//       case ToolbarAlignment.centerRightVertical:
+//         alignment = Alignment.centerRight;
+//         isReverse = false;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(right: popupButtonSpacing);
+//         targetAnchor = Alignment.centerLeft;
+//         followerAnchor = Alignment.centerRight;
+//         followerOffset = Offset(-contentPadding.left, 0.0);
+//         break;
+//       case ToolbarAlignment.bottomRightVertical:
+//         alignment = Alignment.bottomRight;
+//         isReverse = true;
+//         toolbarDirection = Axis.vertical;
+//         popupDirection = Axis.horizontal;
+//         buttonSpacing = EdgeInsets.only(top: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(right: popupButtonSpacing);
+//         targetAnchor = Alignment.centerLeft;
+//         followerAnchor = Alignment.centerRight;
+//         followerOffset = Offset(-contentPadding.left, 0.0);
+//         break;
+//       case ToolbarAlignment.bottomLeftHorizontal:
+//         alignment = Alignment.bottomLeft;
+//         isReverse = false;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(bottom: popupButtonSpacing);
+//         targetAnchor = Alignment.topCenter;
+//         followerAnchor = Alignment.bottomCenter;
+//         followerOffset = Offset(0.0, -contentPadding.top);
+//         break;
+//       case ToolbarAlignment.bottomCenterHorizontal:
+//         alignment = Alignment.bottomCenter;
+//         isReverse = false;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(bottom: popupButtonSpacing);
+//         targetAnchor = Alignment.topCenter;
+//         followerAnchor = Alignment.bottomCenter;
+//         followerOffset = Offset(0.0, -contentPadding.top);
+//         break;
+//       case ToolbarAlignment.bottomRightHorizontal:
+//         alignment = Alignment.bottomRight;
+//         isReverse = true;
+//         toolbarDirection = Axis.horizontal;
+//         popupDirection = Axis.vertical;
+//         buttonSpacing = EdgeInsets.only(left: toolbarButtonSpacing);
+//         popupSpacing = EdgeInsets.only(bottom: popupButtonSpacing);
+//         targetAnchor = Alignment.topCenter;
+//         followerAnchor = Alignment.bottomCenter;
+//         followerOffset = Offset(0.0, -contentPadding.top);
+//         break;
+//     }
+//     _makeComposited(
+//       direction: popupDirection,
+//       spacing: popupSpacing,
+//       targetAnchor: targetAnchor,
+//       followerAnchor: followerAnchor,
+//       followerOffset: followerOffset,
+//       targets: targets,
+//       popups: popups,
+//     );
+//     _assignToolbarButtons(targets: targets, spacing: buttonSpacing);
+//   }
+//
+//   final Map<String, GlobalKey<IconicButtonState>> _toolMap = {};
+//   final Map<String, GlobalKey<PopupState>> _popMap = {};
+//   final List<Widget> popups = [];
+//   List<Widget> targets = [];
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     List<Widget> children = [
+//       Align(
+//         alignment: alignment,
+//         child: SingleChildScrollView(
+//           scrollDirection: direction,
+//           reverse: isReverse,
+//           clipBehavior: Clip.none,
+//           child: Padding(
+//             padding: margin,
+//             child: Material(
+//               shape: shape,
+//               color: color,
+//               clipBehavior: clip,
+//               elevation: elevation,
+//               child: Padding(
+//                 padding: contentPadding,
+//                 child: Flex(
+//                   direction: direction,
+//                   crossAxisAlignment: CrossAxisAlignment.center,
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: buttons,
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ),
+//       ),
+//     ];
+//     children.addAll(popups);
+//     return Stack(
+//       children: children,
+//     );
+//   }
+// }
+
+class PopupController extends AnimationController {
+  PopupController({required TickerProvider vsync})
+      : super(
+          vsync: vsync,
+          lowerBound: 0.0,
+          upperBound: 1.0,
+          duration: kThemeAnimationDuration,
+        );
+
+  void select() => forward(from: 0.0);
+
+  void unSelect() => reverse(from: 1.0);
+}
+
+class Popup extends StatelessWidget {
   final List<IconicButton> buttons;
+  final PopupController controller;
   final String itemKey;
   final LayerLink link;
   final EdgeInsets spacing;
@@ -507,6 +776,7 @@ class Popup extends StatefulWidget {
   const Popup({
     Key? key,
     required this.buttons,
+    required this.controller,
     required this.itemKey,
     required this.link,
     required this.spacing,
@@ -517,48 +787,24 @@ class Popup extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => PopupState();
-}
-
-class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  void select() => _controller.forward(from: 0.0);
-
-  void unSelect() => _controller.reverse(from: 1.0);
-
-  AnimationStatus get status => _controller.status;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      lowerBound: 0.0,
-      upperBound: 1.0,
-      duration: kThemeAnimationDuration,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Positioned(
       left: 0.0,
       top: 0.0,
       child: CompositedTransformFollower(
-        link: widget.link,
-        targetAnchor: widget.targetAnchor,
-        followerAnchor: widget.followerAnchor,
-        offset: widget.offset,
+        link: link,
+        targetAnchor: targetAnchor,
+        followerAnchor: followerAnchor,
+        offset: offset,
         child: Flex(
-          direction: widget.direction,
+          direction: direction,
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: widget.buttons
+          children: buttons
               .map((button) => Padding(
-                    padding: widget.spacing,
+                    padding: spacing,
                     child: ScaleTransition(
-                      scale: _controller.view,
+                      scale: controller.view,
                       child: button,
                     ),
                   ))
@@ -566,11 +812,5 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }
