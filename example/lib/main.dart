@@ -40,24 +40,6 @@ class _MyHomePageState extends State<MyHomePage> {
     Icons.landscape,
   ];
 
-  int colorIndex = 0;
-  ValueNotifier<Color> colorNotifier = ValueNotifier(Colors.blue);
-  List colors = [
-    Colors.blue,
-    Colors.red,
-    Colors.yellow,
-    Colors.indigo,
-    Colors.deepOrange,
-    Colors.amber,
-  ];
-  Map<Color, String> colorText = {
-    Colors.blue: 'Blue',
-    Colors.red: 'Red',
-    Colors.yellow: 'Yellow',
-    Colors.indigo: 'Indigo',
-    Colors.deepOrange: 'Deep Orange',
-    Colors.amber: 'Amber',
-  };
   Map<int, String> numberNames = {
     0: 'One',
     1: 'Two',
@@ -70,7 +52,6 @@ class _MyHomePageState extends State<MyHomePage> {
     8: 'Nine',
   };
 
-  int _colorItemIndex = 2;
   int _reactiveIndex = 6;
   List<FloatingToolbarItem> buttons = [];
   Color background = Colors.blue;
@@ -79,11 +60,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
     for (int index = 0; index < iconList.length; index++) {
-      if (index == _colorItemIndex) {
-        buttons.add(_colorFTItem(index));
-      } else if (index == _reactiveIndex) {
+      if (index == _reactiveIndex) {
         buttons.add(_reactiveFTItem(index));
       } else {
         buttons.add(_popItem(index, background, accent));
@@ -103,37 +81,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedContainer(
-                    duration: kThemeChangeDuration,
-                    width: 200.0,
-                    height: 100.0,
-                    alignment: Alignment.center,
-                    color: colors[colorIndex],
-                    child: Text(
-                      text,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  Padding(padding: EdgeInsets.only(top: 16.0)),
-                  SwitchListTile.adaptive(
-                    title: Text('Enable button'),
-                    value: _reactiveButtonEnabled,
-                    onChanged: (value) => setState(() {
-                      _reactiveButtonEnabled = value;
-                      final button = _reactiveButtonKey.currentState;
-                      if (_reactiveButtonEnabled) {
-                        button?.enable();
-                        button?.reset(label: 'Enabled');
-                      } else {
-                        button?.disable();
-                        button?.reset(label: 'Disabled');
-                      }
-                    }),
-                  )
-                ],
+              child: SwitchListTile.adaptive(
+                title: Text('Enable button'),
+                value: _reactiveButtonEnabled,
+                onChanged: (value) => setState(() {
+                  _reactiveButtonEnabled = value;
+                  if (_reactiveButtonEnabled) {
+                    _reactiveController
+                        .update(remove: {MaterialState.disabled});
+                  } else {
+                    _reactiveController.update(add: {MaterialState.disabled});
+                  }
+                }),
               ),
             ),
             FloatingToolbar(
@@ -153,14 +112,13 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  GlobalKey<IconicButtonState> _reactiveButtonKey =
-      GlobalKey<IconicButtonState>();
+  IconicController _reactiveController = IconicController();
 
   FloatingToolbarItem _reactiveFTItem(int index) {
     return FloatingToolbarItem.custom(
         index.toString(),
         IconicButton(
-          key: _reactiveButtonKey,
+          controller: _reactiveController,
           iconData: iconList[index],
           onPressed: () {
             ScaffoldMessenger.of(context)
@@ -179,28 +137,6 @@ class _MyHomePageState extends State<MyHomePage> {
           },
           label: 'Enabled',
           tooltip: 'This is the enabled/disabled button',
-        ));
-  }
-
-  GlobalKey<IconicButtonState> _colorButtonKey = GlobalKey<IconicButtonState>();
-
-  FloatingToolbarItem _colorFTItem(int index) {
-    return FloatingToolbarItem.custom(
-        index.toString(),
-        IconicButton(
-          key: _colorButtonKey,
-          iconData: iconList[index],
-          style: buttonStyleFrom(primary: colors[colorIndex]),
-          onPressed: () {
-            setState(() {
-              colorIndex = (colorIndex + 1) % colors.length;
-              text = colorText[colors[colorIndex]] ?? 'Whoops';
-              _colorButtonKey.currentState
-                  ?.reset(style: buttonStyleFrom(primary: colors[colorIndex]));
-            });
-          },
-          label: 'Color!',
-          tooltip: 'This is $text button',
         ));
   }
 
@@ -229,8 +165,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _loremIndex = 0;
 
+  List<IconicController> _popupControllers = [];
+
   IconicButton _popup() {
+    IconicController controller = IconicController();
+    _popupControllers.add(controller);
     return IconicButton(
+      controller: controller,
       iconData: Icons.tag_faces,
       style: buttonStyleFrom(
         elevation: 4.0,
@@ -255,6 +196,13 @@ class _MyHomePageState extends State<MyHomePage> {
       preferTooltipBelow: false,
       tooltip: 'Popup tooltip!',
     );
+  }
+
+  @override
+  void dispose() {
+    _popupControllers.forEach((element) => element.dispose());
+    _reactiveController.dispose();
+    super.dispose();
   }
 }
 
