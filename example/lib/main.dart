@@ -2,10 +2,12 @@ import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp() : super();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,8 +29,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String text = 'Blue';
-  List<IconData> iconList = [
+  List<IconData> _iconList = [
     Icons.link,
     Icons.arrow_downward,
     Icons.looks,
@@ -40,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Icons.landscape,
   ];
 
-  Map<int, String> numberNames = {
+  Map<int, String> _numberNames = {
     0: 'One',
     1: 'Two',
     2: 'Three',
@@ -53,23 +54,100 @@ class _MyHomePageState extends State<MyHomePage> {
   };
 
   int _reactiveIndex = 6;
-  List<FloatingToolbarItem> buttons = [];
-  Color background = Colors.blue;
-  Color accent = Colors.white;
+  bool _reactiveButtonEnabled = true;
+  ButtonController _reactiveController = ButtonController();
+  List<ButtonController> _popupControllers = [];
+  int _loremIndex = 0;
+  List<FloatingToolbarItem> _buttons = [];
 
   @override
   void initState() {
     super.initState();
-    for (int index = 0; index < iconList.length; index++) {
+    for (int index = 0; index < _iconList.length; index++) {
       if (index == _reactiveIndex) {
-        buttons.add(_reactiveFTItem(index));
+        _buttons.add(
+          FloatingToolbarItem.custom(
+            IconicButton(
+              controller: _reactiveController,
+              iconData: _iconList[index],
+              onPressed: () {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                      SnackBar(
+                        content: Text('Enabled!'),
+                        action: SnackBarAction(
+                          label: 'OK',
+                          onPressed: () => ScaffoldMessenger.of(context)
+                              .hideCurrentSnackBar(),
+                        ),
+                      ),
+                    )
+                    .closed
+                    .then((value) => setState(() => _loremIndex++));
+              },
+              label: 'Enable?',
+              tooltip: 'This is the enabled/disabled button',
+            ),
+          ),
+        );
       } else {
-        buttons.add(_popItem(index, background, accent));
+        String label = _numberNames[index]!;
+        int num = 2 + (index % (3));
+        List<PopupItemBuilder> buttons = [];
+        for (int i = 0; i < num; i++) {
+          ButtonController buttonController = ButtonController();
+          _popupControllers.add(buttonController);
+          buttons.add(
+            PopupItemBuilder(
+              controller: buttonController,
+              builder: (context, state, child) {
+                ThemeData theme = Theme.of(context);
+                return BaseIconicButton(
+                  state: state,
+                  iconData: Icons.tag_faces,
+                  style: buttonStyleFrom(
+                    elevation: 4.0,
+                    shape: CircleBorder(),
+                    primary: theme.primaryColor,
+                    onPrimary: theme.colorScheme.onPrimary,
+                    onSurface: theme.colorScheme.onSurface,
+                  ),
+                  onPressed: () {
+                    String text = lorem[_loremIndex % lorem.length];
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(
+                          SnackBar(
+                            content: Text(text),
+                            action: SnackBarAction(
+                              label: 'OK',
+                              onPressed: () => ScaffoldMessenger.of(context)
+                                  .hideCurrentSnackBar(),
+                            ),
+                          ),
+                        )
+                        .closed
+                        .then((value) => setState(() => _loremIndex++));
+                  },
+                  preferTooltipBelow: false,
+                  tooltip: 'Popup tooltip!',
+                );
+              },
+            ),
+          );
+        }
+        _buttons.add(
+          FloatingToolbarItem.standard(
+            IconicItem(
+              iconData: _iconList[index],
+              label: label,
+              tooltip: 'This is $label',
+            ),
+            buttons,
+          ),
+        );
       }
     }
   }
-
-  bool _reactiveButtonEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -87,114 +165,29 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (value) => setState(() {
                   _reactiveButtonEnabled = value;
                   if (_reactiveButtonEnabled) {
-                    _reactiveController
-                        .update(remove: {MaterialState.disabled});
+                    _reactiveController.enable();
+                    _popupControllers.first.enable();
                   } else {
-                    _reactiveController.update(add: {MaterialState.disabled});
+                    _reactiveController.disable();
+                    _popupControllers.first.disable();
                   }
                 }),
               ),
             ),
             FloatingToolbar(
-              items: buttons,
+              items: _buttons,
+              backgroundColor: Theme.of(context).primaryColor,
               preferTooltipBelow: false,
               alignment: ToolbarAlignment.bottomCenterHorizontal,
               margin: EdgeInsets.all(4.0),
               contentPadding: EdgeInsets.all(4.0),
               popupSpacing: 4.0,
               buttonSpacing: 4.0,
-              onValueChanged: (key) =>
-                  setState(() => print('ValueChanged called with $key')),
+              onValueChanged: (key) => setState(() => print('Pressed $key')),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  IconicController _reactiveController = IconicController();
-
-  FloatingToolbarItem _reactiveFTItem(int index) {
-    return FloatingToolbarItem.custom(
-        index.toString(),
-        IconicButton(
-          controller: _reactiveController,
-          iconData: iconList[index],
-          onPressed: () {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(
-                  SnackBar(
-                    content: Text('Enabled!'),
-                    action: SnackBarAction(
-                      label: 'OK',
-                      onPressed: () =>
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                    ),
-                  ),
-                )
-                .closed
-                .then((value) => setState(() => _loremIndex++));
-          },
-          label: 'Enabled',
-          tooltip: 'This is the enabled/disabled button',
-        ));
-  }
-
-  FloatingToolbarItem _popItem(int index, Color background, Color accent) {
-    String label = numberNames[index]!;
-    return FloatingToolbarItem.standard(
-      index.toString(),
-      IconicItem(
-        iconData: iconList[index],
-        onPressed: () => print('Pressed index: $index'),
-        label: label,
-        tooltip: 'This is $label',
-      ),
-      _popupList(index),
-    );
-  }
-
-  List<IconicButton> _popupList(int index) {
-    int num = 2 + (index % (3));
-    List<IconicButton> buttons = [];
-    for (int i = 0; i < num; i++) {
-      buttons.add(_popup());
-    }
-    return buttons;
-  }
-
-  int _loremIndex = 0;
-
-  List<IconicController> _popupControllers = [];
-
-  IconicButton _popup() {
-    IconicController controller = IconicController();
-    _popupControllers.add(controller);
-    return IconicButton(
-      controller: controller,
-      iconData: Icons.tag_faces,
-      style: buttonStyleFrom(
-        elevation: 4.0,
-        shape: CircleBorder(),
-      ),
-      onPressed: () {
-        String text = lorem[_loremIndex % lorem.length];
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-              SnackBar(
-                content: Text(text),
-                action: SnackBarAction(
-                  label: 'OK',
-                  onPressed: () =>
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-                ),
-              ),
-            )
-            .closed
-            .then((value) => setState(() => _loremIndex++));
-      },
-      preferTooltipBelow: false,
-      tooltip: 'Popup tooltip!',
     );
   }
 
