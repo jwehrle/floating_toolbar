@@ -13,6 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  material_design_icons_flutter:
+
   iconic_button:
     git:
       url: https://github.com/jwehrle/iconic_button.git
