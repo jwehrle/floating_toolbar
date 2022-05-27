@@ -123,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 return BaseIconicButton(
                   state: state,
                   iconData: Icons.tag_faces,
-                  style: buttonStyleFrom(
+                  style: selectableStyleFrom(
                     elevation: 4.0,
                     shape: CircleBorder(),
                     primary: theme.primaryColor,
