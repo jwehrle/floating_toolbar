@@ -99,9 +99,10 @@ class FloatingToolbarItem {
 /// the toolbar contains or that it scrolls or where the feature they're
 /// looking for is. [FloatingToolbar] enables functional organization of buttons
 /// that can be shown or hidden by user in an intuitive manner.
-class FloatingToolbar extends StatefulWidget {
-  const FloatingToolbar({
+class FloatingToolbar extends StatelessWidget {
+  FloatingToolbar({
     Key? key,
+    required this.selectNotifier,
     required this.items,
     this.alignment = ToolbarAlignment.bottomCenterHorizontal,
     this.backgroundColor,
@@ -124,7 +125,16 @@ class FloatingToolbar extends StatefulWidget {
     this.buttonChangeDuration = kThemeChangeDuration,
     this.buttonWaitDuration = const Duration(seconds: 2),
     this.buttonCurve = Curves.linear,
-  }) : super(key: key);
+  }) : super(key: key) {
+    _assignBasics();
+    _assignWidgets();
+  }
+
+  /// Used by [FloatingToolbarItem.standard] to assign index if current value is
+  /// null or set value to null if already selected. This ValueNotifier can be
+  /// used to remotely trigger popups or to incorporate
+  /// [FloatingToolbarItem.custom] into the standard behavior of FloatingToolbar.
+  final ValueNotifier<int?> selectNotifier;
 
   /// The location of the toolbar. The first direction indicates alignment along
   /// a side, the second direction indicates alignment relative to that side.
@@ -192,167 +202,162 @@ class FloatingToolbar extends StatefulWidget {
   /// [FloatingToolbarItem.standard]. Default is [Curves.linear]
   final Curve buttonCurve;
 
-  @override
-  State<StatefulWidget> createState() => FloatingToolbarState();
-}
-
-class FloatingToolbarState extends State<FloatingToolbar> {
-  /// Stores currently selected item index or null if none is selected.
-  final ValueNotifier<int?> _select = ValueNotifier(null);
-
+  // Filled in constructor body
   final List<Widget> _toolbarButtons = [];
   final List<Widget> _popupList = [];
-  late Alignment _toolbarAlignment;
-  late bool _isToolbarReverse;
-  late Axis _toolbarDirection;
-  late EdgeInsets _buttonSpacing;
-  late Axis _popupDirection;
-  late EdgeInsets _popupSpacing;
-  late Alignment _targetAnchor;
-  late Alignment _followerAnchor;
-  late Offset _followerOffset;
+
+  // Assigned in constructor body
+  late final Alignment _toolbarAlignment;
+  late final bool _isToolbarReverse;
+  late final Axis _toolbarDirection;
+  late final EdgeInsets _buttonSpacing;
+  late final Axis _popupDirection;
+  late final EdgeInsets _popupSpacing;
+  late final Alignment _targetAnchor;
+  late final Alignment _followerAnchor;
+  late final Offset _followerOffset;
 
   void _assignBasics() {
-    switch (widget.alignment) {
+    switch (alignment) {
       case ToolbarAlignment.topLeftVertical:
         _toolbarAlignment = Alignment.topLeft;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _followerOffset = Offset(widget.contentPadding.right, 0.0);
+        _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.centerLeftVertical:
         _toolbarAlignment = Alignment.centerLeft;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _followerOffset = Offset(widget.contentPadding.right, 0.0);
+        _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.bottomLeftVertical:
         _toolbarAlignment = Alignment.bottomLeft;
         _isToolbarReverse = true;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _followerOffset = Offset(widget.contentPadding.right, 0.0);
+        _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.topLeftHorizontal:
         _toolbarAlignment = Alignment.topLeft;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _followerOffset = Offset(0.0, widget.contentPadding.bottom);
+        _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topCenterHorizontal:
         _toolbarAlignment = Alignment.topCenter;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _followerOffset = Offset(0.0, widget.contentPadding.bottom);
+        _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightHorizontal:
         _toolbarAlignment = Alignment.topRight;
         _isToolbarReverse = true;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _followerOffset = Offset(0.0, widget.contentPadding.bottom);
+        _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightVertical:
         _toolbarAlignment = Alignment.topRight;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _followerOffset = Offset(-widget.contentPadding.left, 0.0);
+        _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.centerRightVertical:
         _toolbarAlignment = Alignment.centerRight;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _followerOffset = Offset(-widget.contentPadding.left, 0.0);
+        _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomRightVertical:
         _toolbarAlignment = Alignment.bottomRight;
         _isToolbarReverse = true;
         _toolbarDirection = Axis.vertical;
         _popupDirection = Axis.horizontal;
-        _buttonSpacing = EdgeInsets.only(top: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _followerOffset = Offset(-widget.contentPadding.left, 0.0);
+        _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomLeftHorizontal:
         _toolbarAlignment = Alignment.bottomLeft;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _followerOffset = Offset(0.0, -widget.contentPadding.top);
+        _followerOffset = Offset(0.0, -contentPadding.top);
         break;
       case ToolbarAlignment.bottomCenterHorizontal:
         _toolbarAlignment = Alignment.bottomCenter;
         _isToolbarReverse = false;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _followerOffset = Offset(0.0, -widget.contentPadding.top);
+        _followerOffset = Offset(0.0, -contentPadding.top);
         break;
       case ToolbarAlignment.bottomRightHorizontal:
         _toolbarAlignment = Alignment.bottomRight;
         _isToolbarReverse = true;
         _toolbarDirection = Axis.horizontal;
         _popupDirection = Axis.vertical;
-        _buttonSpacing = EdgeInsets.only(left: widget.buttonSpacing);
-        _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
+        _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
+        _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _followerOffset = Offset(0.0, -widget.contentPadding.top);
+        _followerOffset = Offset(0.0, -contentPadding.top);
         break;
     }
   }
 
   void _onTap(int index) {
-    _select.value = _select.value == index ? null : index;
-    if (widget.onValueChanged != null) {
-      widget.onValueChanged!(index);
+    selectNotifier.value = selectNotifier.value == index ? null : index;
+    if (onValueChanged != null) {
+      onValueChanged!(index);
     }
   }
 
@@ -371,7 +376,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   Widget _button(int index, FloatingToolbarItem item) {
     return ValueListenableBuilder<int?>(
-      valueListenable: _select,
+      valueListenable: selectNotifier,
       builder: (context, value, _) {
         return BaseIconicButton(
           state: index == value ? ButtonState.selected : ButtonState.unselected,
@@ -379,12 +384,12 @@ class FloatingToolbarState extends State<FloatingToolbar> {
           onPressed: () => _onTap(index),
           label: item.toolbarItem.label,
           tooltip: item.toolbarItem.tooltip,
-          style: widget.toolbarStyle,
-          tooltipOffset: widget.tooltipOffset,
-          preferTooltipBelow: widget.preferTooltipBelow,
-          changeDuration: widget.buttonChangeDuration,
-          waitDuration: widget.buttonWaitDuration,
-          curve: widget.buttonCurve,
+          style: toolbarStyle,
+          tooltipOffset: tooltipOffset,
+          preferTooltipBelow: preferTooltipBelow,
+          changeDuration: buttonChangeDuration,
+          waitDuration: buttonWaitDuration,
+          curve: buttonCurve,
         );
       },
     );
@@ -413,7 +418,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   Widget _popup(int index, FloatingToolbarItem item, LayerLink link) {
     return Popup(
       index: index,
-      listenable: _select,
+      listenable: selectNotifier,
       itemBuilderList: item.popups,
       spacing: _popupSpacing,
       followerData: FollowerData(
@@ -427,10 +432,10 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   }
 
   void _assignWidgets() {
-    bool onlyOneButton = widget.items.length == 1;
-    int lastIndex = widget.items.length - 1;
-    for (int index = 0; index < widget.items.length; index++) {
-      FloatingToolbarItem item = widget.items[index];
+    bool onlyOneButton = items.length == 1;
+    int lastIndex = items.length - 1;
+    for (int index = 0; index < items.length; index++) {
+      FloatingToolbarItem item = items[index];
       bool pad = onlyOneButton || _isAtStart(index, lastIndex);
       final LayerLink link = LayerLink();
       if (item.isCustom) {
@@ -443,43 +448,28 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _assignBasics();
-    _assignWidgets();
-  }
-
-  @override
-  void didUpdateWidget(covariant FloatingToolbar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.alignment != oldWidget.alignment) {
-      _assignBasics();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Stack(
       children: <Widget>[
             AnimatedAlign(
-              duration: widget.toolbarAnimationDuration,
+              duration: toolbarAnimationDuration,
               alignment: _toolbarAlignment,
               child: SingleChildScrollView(
                 scrollDirection: _toolbarDirection,
                 reverse: _isToolbarReverse,
                 clipBehavior: Clip.none,
                 child: AnimatedPadding(
-                  duration: widget.toolbarAnimationDuration,
-                  padding: widget.margin,
+                  duration: toolbarAnimationDuration,
+                  padding: margin,
                   child: Material(
-                    shape: widget.shape,
-                    color: widget.backgroundColor,
-                    clipBehavior: widget.clip,
-                    elevation: widget.elevation,
-                    animationDuration: widget.toolbarAnimationDuration,
+                    shape: shape,
+                    color: backgroundColor,
+                    clipBehavior: clip,
+                    elevation: elevation,
+                    animationDuration: toolbarAnimationDuration,
                     child: AnimatedPadding(
-                      duration: widget.toolbarAnimationDuration,
-                      padding: widget.contentPadding,
+                      duration: toolbarAnimationDuration,
+                      padding: contentPadding,
                       child: Flex(
                         direction: _toolbarDirection,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -494,12 +484,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
           ] +
           _popupList,
     );
-  }
-
-  @override
-  void dispose() {
-    _select.dispose();
-    super.dispose();
   }
 }
 
