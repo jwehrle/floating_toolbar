@@ -61,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<FloatingToolbarItem> _primaryItems = [];
   late EdgeInsets _margin;
   late ToolbarAlignment _toolbarAlignment;
+  final ValueNotifier<int?> _selectNotifier = ValueNotifier(null);
 
   void _snack() {
     String text = lorem[_loremIndex % lorem.length];
@@ -176,6 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             FloatingToolbar(
+              selectNotifier: _selectNotifier,
               items: _primaryItems,
               backgroundColor: Theme.of(context).primaryColor,
               preferTooltipBelow: false,
@@ -196,6 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _popupControllers.forEach((element) => element.dispose());
     _reactiveController.dispose();
+    _selectNotifier.dispose();
     super.dispose();
   }
 }
