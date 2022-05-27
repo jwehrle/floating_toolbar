@@ -79,7 +79,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: ed8a90ced0530263a8f05892558040803b75a562
+      resolved-ref: cb03d2a695448a52f0e5cbfa06e52d320ba66f2f
       url: "https://github.com/jwehrle/iconic_button.git"
     source: git
     version: "0.0.1"
