@@ -183,6 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
               preferTooltipBelow: false,
               alignment: _toolbarAlignment,
               margin: _margin,
+              // useToolbarBody: false,
               contentPadding: EdgeInsets.all(4.0),
               popupSpacing: 4.0,
               buttonSpacing: 4.0,

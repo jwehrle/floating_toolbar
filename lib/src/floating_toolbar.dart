@@ -121,6 +121,7 @@ class FloatingToolbar extends StatelessWidget {
     this.tooltipOffset,
     this.preferTooltipBelow,
     this.toolbarStyle,
+    this.useToolbarBody = true,
     this.toolbarAnimationDuration = const Duration(milliseconds: 500),
     this.buttonChangeDuration = kThemeChangeDuration,
     this.buttonWaitDuration = const Duration(seconds: 2),
@@ -201,6 +202,8 @@ class FloatingToolbar extends StatelessWidget {
   /// Curve applied button state change animations. Applied to
   /// [FloatingToolbarItem.standard]. Default is [Curves.linear]
   final Curve buttonCurve;
+
+  final bool useToolbarBody;
 
   // Filled in constructor body
   final List<Widget> _toolbarButtons = [];
@@ -461,23 +464,30 @@ class FloatingToolbar extends StatelessWidget {
                 child: AnimatedPadding(
                   duration: toolbarAnimationDuration,
                   padding: margin,
-                  child: Material(
-                    shape: shape,
-                    color: backgroundColor,
-                    clipBehavior: clip,
-                    elevation: elevation,
-                    animationDuration: toolbarAnimationDuration,
-                    child: AnimatedPadding(
-                      duration: toolbarAnimationDuration,
-                      padding: contentPadding,
-                      child: Flex(
-                        direction: _toolbarDirection,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: _toolbarButtons,
-                      ),
-                    ),
-                  ),
+                  child: useToolbarBody
+                      ? Material(
+                          shape: shape,
+                          color: backgroundColor,
+                          clipBehavior: clip,
+                          elevation: elevation,
+                          animationDuration: toolbarAnimationDuration,
+                          child: AnimatedPadding(
+                            duration: toolbarAnimationDuration,
+                            padding: contentPadding,
+                            child: Flex(
+                              direction: _toolbarDirection,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: _toolbarButtons,
+                            ),
+                          ),
+                        )
+                      : Flex(
+                          direction: _toolbarDirection,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: _toolbarButtons,
+                        ),
                 ),
               ),
             ),
