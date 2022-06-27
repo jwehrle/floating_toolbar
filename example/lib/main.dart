@@ -127,6 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: selectableStyleFrom(
                     elevation: 4.0,
                     shape: CircleBorder(),
+                    padding: EdgeInsets.all(8.0),
                     primary: theme.primaryColor,
                     onPrimary: theme.colorScheme.onPrimary,
                     onSurface: theme.colorScheme.onSurface,
@@ -183,7 +184,6 @@ class _MyHomePageState extends State<MyHomePage> {
               preferTooltipBelow: false,
               alignment: _toolbarAlignment,
               margin: _margin,
-              // useToolbarBody: false,
               contentPadding: EdgeInsets.all(4.0),
               popupSpacing: 4.0,
               buttonSpacing: 4.0,

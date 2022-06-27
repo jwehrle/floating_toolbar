@@ -209,6 +209,9 @@ class FloatingToolbar extends StatelessWidget {
   final List<Widget> _toolbarButtons = [];
   final List<Widget> _popupList = [];
 
+  // Used to calculate button widths and toolbar width
+  final List<String> _toolbarLabels = [];
+
   // Assigned in constructor body
   late final Alignment _toolbarAlignment;
   late final bool _isToolbarReverse;
@@ -443,8 +446,10 @@ class FloatingToolbar extends StatelessWidget {
       final LayerLink link = LayerLink();
       if (item.isCustom) {
         _toolbarButtons.add(_custom(pad, item));
+        _toolbarLabels.add(item._customButton!.label ?? '');
       } else {
         _toolbarButtons.add(_standard(pad, index, item, link));
+        _toolbarLabels.add(item._toolbarItem!.label ?? '');
         _popupList.add(_popup(index, item, link));
       }
     }
@@ -452,6 +457,20 @@ class FloatingToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = toolbarStyle?.textStyle?.resolve({}) ??
+        Theme.of(context).textTheme.bodyText2;
+    double width = _toolbarDirection == Axis.horizontal
+        ? iconicRowWidth(
+            _toolbarLabels,
+            textStyle,
+            MediaQuery.of(context).textScaleFactor,
+            toolbarStyle?.padding?.resolve({}) as EdgeInsets?,
+          )
+        : longestLabelIntrinsicWidth(
+            _toolbarLabels,
+            textStyle,
+            MediaQuery.of(context).textScaleFactor,
+          );
     return Stack(
       children: <Widget>[
             AnimatedAlign(
@@ -465,28 +484,40 @@ class FloatingToolbar extends StatelessWidget {
                   duration: toolbarAnimationDuration,
                   padding: margin,
                   child: useToolbarBody
-                      ? Material(
-                          shape: shape,
-                          color: backgroundColor,
-                          clipBehavior: clip,
-                          elevation: elevation,
-                          animationDuration: toolbarAnimationDuration,
-                          child: AnimatedPadding(
-                            duration: toolbarAnimationDuration,
-                            padding: contentPadding,
-                            child: Flex(
-                              direction: _toolbarDirection,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: _toolbarButtons,
+                      ? IntrinsicHeight(
+                          child: Material(
+                            shape: shape,
+                            color: backgroundColor,
+                            clipBehavior: clip,
+                            elevation: elevation,
+                            animationDuration: toolbarAnimationDuration,
+                            child: AnimatedPadding(
+                              duration: toolbarAnimationDuration,
+                              padding: contentPadding,
+                              child: SizedBox(
+                                width: width,
+                                child: Flex(
+                                  direction: _toolbarDirection,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: _toolbarButtons
+                                      .map((e) => Expanded(child: e))
+                                      .toList(),
+                                ),
+                              ),
                             ),
                           ),
                         )
-                      : Flex(
-                          direction: _toolbarDirection,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: _toolbarButtons,
+                      : SizedBox(
+                          width: width,
+                          child: Flex(
+                            direction: _toolbarDirection,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.max,
+                            children: _toolbarButtons
+                                .map((e) => Expanded(child: e))
+                                .toList(),
+                          ),
                         ),
                 ),
               ),
