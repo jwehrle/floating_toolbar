@@ -122,6 +122,7 @@ class FloatingToolbar extends StatelessWidget {
     this.preferTooltipBelow,
     this.toolbarStyle,
     this.useToolbarBody = true,
+    this.equalizeButton = true,
     this.toolbarAnimationDuration = const Duration(milliseconds: 500),
     this.buttonChangeDuration = kThemeChangeDuration,
     this.buttonWaitDuration = const Duration(seconds: 2),
@@ -203,7 +204,12 @@ class FloatingToolbar extends StatelessWidget {
   /// [FloatingToolbarItem.standard]. Default is [Curves.linear]
   final Curve buttonCurve;
 
+  /// Wrap toolbar in a Material
   final bool useToolbarBody;
+
+  /// Make each button have the same width as the button with the longest
+  /// label.
+  final bool equalizeButton;
 
   // Filled in constructor body
   final List<Widget> _toolbarButtons = [];
@@ -457,20 +463,54 @@ class FloatingToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = toolbarStyle?.textStyle?.resolve({}) ??
-        Theme.of(context).textTheme.bodyText2;
-    double width = _toolbarDirection == Axis.horizontal
-        ? iconicRowWidth(
-            _toolbarLabels,
-            textStyle,
-            MediaQuery.of(context).textScaleFactor,
-            toolbarStyle?.padding?.resolve({}) as EdgeInsets?,
-          )
-        : longestLabelIntrinsicWidth(
-            _toolbarLabels,
-            textStyle,
-            MediaQuery.of(context).textScaleFactor,
-          );
+    Widget toolbar;
+    if (equalizeButton) {
+      final textStyle = toolbarStyle?.textStyle?.resolve({}) ??
+          Theme.of(context).textTheme.bodyText2;
+      double width = _toolbarDirection == Axis.horizontal
+          ? iconicRowWidth(
+              _toolbarLabels,
+              textStyle,
+              MediaQuery.of(context).textScaleFactor,
+              toolbarStyle?.padding?.resolve({}) as EdgeInsets?,
+            )
+          : longestLabelIntrinsicWidth(
+              _toolbarLabels,
+              textStyle,
+              MediaQuery.of(context).textScaleFactor,
+            );
+      toolbar = Flex(
+        direction: _toolbarDirection,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
+      );
+      toolbar = SizedBox(
+        width: width,
+        child: toolbar,
+      );
+    } else {
+      toolbar = Flex(
+        direction: _toolbarDirection,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: _toolbarButtons,
+      );
+    }
+    if (useToolbarBody) {
+      toolbar = Material(
+        shape: shape,
+        color: backgroundColor,
+        clipBehavior: clip,
+        elevation: elevation,
+        animationDuration: toolbarAnimationDuration,
+        child: AnimatedPadding(
+          duration: toolbarAnimationDuration,
+          padding: contentPadding,
+          child: toolbar,
+        ),
+      );
+    }
     return Stack(
       children: <Widget>[
             AnimatedAlign(
@@ -483,42 +523,7 @@ class FloatingToolbar extends StatelessWidget {
                 child: AnimatedPadding(
                   duration: toolbarAnimationDuration,
                   padding: margin,
-                  child: useToolbarBody
-                      ? IntrinsicHeight(
-                          child: Material(
-                            shape: shape,
-                            color: backgroundColor,
-                            clipBehavior: clip,
-                            elevation: elevation,
-                            animationDuration: toolbarAnimationDuration,
-                            child: AnimatedPadding(
-                              duration: toolbarAnimationDuration,
-                              padding: contentPadding,
-                              child: SizedBox(
-                                width: width,
-                                child: Flex(
-                                  direction: _toolbarDirection,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.max,
-                                  children: _toolbarButtons
-                                      .map((e) => Expanded(child: e))
-                                      .toList(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        )
-                      : SizedBox(
-                          width: width,
-                          child: Flex(
-                            direction: _toolbarDirection,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.max,
-                            children: _toolbarButtons
-                                .map((e) => Expanded(child: e))
-                                .toList(),
-                          ),
-                        ),
+                  child: IntrinsicHeight(child: toolbar),
                 ),
               ),
             ),
