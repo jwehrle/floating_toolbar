@@ -105,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: _reactiveController,
               iconData: _iconList[index],
               onPressed: _enabledSnack,
-              label: 'Enable?',
+              label: 'Enable',
               tooltip: 'This is the enabled/disabled button',
             ),
           ),
