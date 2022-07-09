@@ -643,7 +643,6 @@ class Popup extends StatefulWidget {
 
 class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
   late final AnimationController _scaleController;
-  late final List<Widget> _children;
 
   void _onSelectListener() {
     if (widget.listenable.value == widget.index) {
@@ -668,20 +667,6 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
       duration: kThemeAnimationDuration,
     );
     widget.listenable.addListener(_onSelectListener);
-    _children = widget.itemBuilderList
-        .map(
-          (item) => Padding(
-            padding: widget.spacing,
-            child: ScaleTransition(
-              scale: _scaleController.view,
-              child: ValueListenableBuilder<ButtonState>(
-                valueListenable: item.controller,
-                builder: item.builder,
-              ),
-            ),
-          ),
-        )
-        .toList();
   }
 
   @override
@@ -698,7 +683,20 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
           direction: widget.followerData.direction,
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: _children,
+          children: widget.itemBuilderList
+              .map(
+                (item) => Padding(
+                  padding: widget.spacing,
+                  child: ScaleTransition(
+                    scale: _scaleController.view,
+                    child: ValueListenableBuilder<ButtonState>(
+                      valueListenable: item.controller,
+                      builder: item.builder,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
         ),
       ),
     );
