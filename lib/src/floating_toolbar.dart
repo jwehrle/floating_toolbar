@@ -465,30 +465,29 @@ class FloatingToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget toolbar;
     if (equalizeButton) {
-      final textStyle = toolbarStyle?.textStyle?.resolve({}) ??
-          Theme.of(context).textTheme.bodyText2;
-      double width = _toolbarDirection == Axis.horizontal
-          ? iconicRowWidth(
-              _toolbarLabels,
-              textStyle,
-              MediaQuery.of(context).textScaleFactor,
-              toolbarStyle?.padding?.resolve({}) as EdgeInsets?,
-            )
-          : longestLabelIntrinsicWidth(
-              _toolbarLabels,
-              textStyle,
-              MediaQuery.of(context).textScaleFactor,
-            );
-      toolbar = Flex(
-        direction: _toolbarDirection,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisSize: MainAxisSize.max,
-        children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
-      );
-      toolbar = SizedBox(
-        width: width,
-        child: toolbar,
-      );
+      if (_toolbarDirection == Axis.horizontal) {
+        toolbar = SizedBox(
+          child: IntrinsicWidth(
+            child: Flex(
+              direction: _toolbarDirection,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
+            ),
+          ),
+        );
+      } else {
+        toolbar = SizedBox(
+          child: IntrinsicHeight(
+            child: Flex(
+              direction: _toolbarDirection,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.max,
+              children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
+            ),
+          ),
+        );
+      }
     } else {
       toolbar = Flex(
         direction: _toolbarDirection,
