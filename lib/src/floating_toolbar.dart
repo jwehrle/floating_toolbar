@@ -44,48 +44,81 @@ class IconicItem {
   final String? tooltip;
 }
 
+/// The types of toolbar items [FloatingToolbar] accepts.
+enum FloatingToolbarItemType { basic, popup, custom }
+
 class FloatingToolbarItem {
+  final FloatingToolbarItemType type;
+
   /// Used to make a toolbar button that controls associated popups. Selection
   /// of this button is handled by [FloatingToolbar]. Do not use this
   /// constructor if you want to control the appearance changes of this button.
-  FloatingToolbarItem.standard(this._toolbarItem, this._popups)
-      : this._customButton = null,
-        this.isCustom = false;
+  FloatingToolbarItem.popup(
+    IconicItem popupButton,
+    List<PopupItemBuilder> popups,
+  )   : this.type = FloatingToolbarItemType.popup,
+        this._popupButton = popupButton,
+        this._popups = popups,
+        this._basicButton = null,
+        this._custom = null;
 
   /// Used to insert a custom button into the [FloatingToolbar]. This button's
   /// selection is not controlled by [FloatingToolbar] and has no associated
   /// popups.
-  FloatingToolbarItem.custom(this._customButton)
-      : this.isCustom = true,
-        this._toolbarItem = null,
+  FloatingToolbarItem.basic(IconicButton basicButton)
+      : this.type = FloatingToolbarItemType.basic,
+        this._basicButton = basicButton,
+        this._custom = null,
+        this._popupButton = null,
         this._popups = null;
+
+  /// Used to make a toolbar item that is a SizedBox where the dimension set
+  /// is the axis of the toolbar. This is necessary to prevent unbounded
+  /// dimensions.
+  FloatingToolbarItem.custom(SizedBox custom)
+      : assert(custom.width != null || custom.height != null),
+        this._custom = custom,
+        this.type = FloatingToolbarItemType.custom,
+        this._basicButton = null,
+        this._popups = null,
+        this._popupButton = null;
+
+  // final bool isPopup;
 
   /// IconicItem used in standard mode to build radio button style toolbar
   /// button
-  final IconicItem? _toolbarItem;
-  IconicItem get toolbarItem {
-    assert(!isCustom);
-    return _toolbarItem!;
+  final IconicItem? _popupButton;
+  IconicItem get popupButton {
+    assert(type == FloatingToolbarItemType.popup);
+    return _popupButton!;
   }
 
   /// List of PopupItemBuilders used to build a [Flex] of popup buttons
   /// associated with a radio button style toolbar button
   final List<PopupItemBuilder>? _popups;
   List<PopupItemBuilder> get popups {
-    assert(!isCustom);
+    assert(type == FloatingToolbarItemType.popup);
     return _popups!;
   }
 
-  /// If true, [_customButton] is not null but both [_toolbarItem] and [_popups]
-  /// are null. If false, both [_toolbarItem] and [_popups] are not null but
-  /// [_customButton] is null.
-  final bool isCustom;
+  /// If true, [_basicButton] is not null but both [_popupButton] and [_popups]
+  /// are null. If false, both [_popupButton] and [_popups] are not null but
+  /// [_basicButton] is null.
+  // final bool isBasic;
 
   /// For use when no popups are to be associated with this toolbar button
-  final IconicButton? _customButton;
-  IconicButton get customButton {
-    assert(isCustom);
-    return _customButton!;
+  final IconicButton? _basicButton;
+  IconicButton get basicButton {
+    assert(type == FloatingToolbarItemType.basic);
+    return _basicButton!;
+  }
+
+  // final bool isText;
+
+  final SizedBox? _custom;
+  SizedBox get custom {
+    assert(type == FloatingToolbarItemType.custom);
+    return _custom!;
   }
 }
 
@@ -132,10 +165,10 @@ class FloatingToolbar extends StatelessWidget {
     _assignWidgets();
   }
 
-  /// Used by [FloatingToolbarItem.standard] to assign index if current value is
+  /// Used by [FloatingToolbarItem.popup] to assign index if current value is
   /// null or set value to null if already selected. This ValueNotifier can be
   /// used to remotely trigger popups or to incorporate
-  /// [FloatingToolbarItem.custom] into the standard behavior of FloatingToolbar.
+  /// [FloatingToolbarItem.basic] into the standard behavior of FloatingToolbar.
   final ValueNotifier<int?> selectNotifier;
 
   /// The location of the toolbar. The first direction indicates alignment along
@@ -197,26 +230,26 @@ class FloatingToolbar extends StatelessWidget {
   final Duration buttonWaitDuration;
 
   /// Duration applied button state change animations. Applied to
-  /// [FloatingToolbarItem.standard]. Default is [kThemeChangeDuration]
+  /// [FloatingToolbarItem.popup]. Default is [kThemeChangeDuration]
   final Duration buttonChangeDuration;
 
   /// Curve applied button state change animations. Applied to
-  /// [FloatingToolbarItem.standard]. Default is [Curves.linear]
+  /// [FloatingToolbarItem.popup]. Default is [Curves.linear]
   final Curve buttonCurve;
 
   /// Wrap toolbar in a Material
   final bool useToolbarBody;
 
-  /// Make each button have the same width as the button with the longest
+  /// Make each non-custom button have the same width as the button with the longest
   /// label.
   final bool equalizeButton;
+
+  // keeps track of custom buttons and doesn't equalize their width
+  final Set<int> _customIndices = {};
 
   // Filled in constructor body
   final List<Widget> _toolbarButtons = [];
   final List<Widget> _popupList = [];
-
-  // Used to calculate button widths and toolbar width
-  final List<String> _toolbarLabels = [];
 
   // Assigned in constructor body
   late final Alignment _toolbarAlignment;
@@ -377,12 +410,21 @@ class FloatingToolbar extends StatelessWidget {
     return _isToolbarReverse ? index == lastIndex : index == 0;
   }
 
-  Widget _custom(bool pad, FloatingToolbarItem item) {
-    return pad
-        ? item.customButton
+  Widget _basic(bool noPad, FloatingToolbarItem item) {
+    return noPad
+        ? item.basicButton
         : Padding(
             padding: _buttonSpacing,
-            child: item.customButton,
+            child: item.basicButton,
+          );
+  }
+
+  Widget _custom(bool noPad, FloatingToolbarItem item) {
+    return noPad
+        ? item.custom
+        : Padding(
+            padding: _buttonSpacing,
+            child: item.custom,
           );
   }
 
@@ -392,10 +434,10 @@ class FloatingToolbar extends StatelessWidget {
       builder: (context, value, _) {
         return BaseIconicButton(
           state: index == value ? ButtonState.selected : ButtonState.unselected,
-          iconData: item.toolbarItem.iconData,
+          iconData: item.popupButton.iconData,
           onPressed: () => _onTap(index),
-          label: item.toolbarItem.label,
-          tooltip: item.toolbarItem.tooltip,
+          label: item.popupButton.label,
+          tooltip: item.popupButton.tooltip,
           style: toolbarStyle,
           tooltipOffset: tooltipOffset,
           preferTooltipBelow: preferTooltipBelow,
@@ -408,12 +450,12 @@ class FloatingToolbar extends StatelessWidget {
   }
 
   Widget _standard(
-    bool pad,
+    bool noPad,
     int index,
     FloatingToolbarItem item,
     LayerLink link,
   ) {
-    return pad
+    return noPad
         ? CompositedTransformTarget(
             link: link,
             child: _button(index, item),
@@ -448,17 +490,39 @@ class FloatingToolbar extends StatelessWidget {
     int lastIndex = items.length - 1;
     for (int index = 0; index < items.length; index++) {
       FloatingToolbarItem item = items[index];
-      bool pad = onlyOneButton || _isAtStart(index, lastIndex);
+      bool noPad = onlyOneButton || _isAtStart(index, lastIndex);
       final LayerLink link = LayerLink();
-      if (item.isCustom) {
-        _toolbarButtons.add(_custom(pad, item));
-        _toolbarLabels.add(item._customButton!.label ?? '');
-      } else {
-        _toolbarButtons.add(_standard(pad, index, item, link));
-        _toolbarLabels.add(item._toolbarItem!.label ?? '');
-        _popupList.add(_popup(index, item, link));
+      switch (item.type) {
+        case FloatingToolbarItemType.basic:
+          _toolbarButtons.add(_basic(noPad, item));
+          break;
+        case FloatingToolbarItemType.popup:
+          _toolbarButtons.add(_standard(noPad, index, item, link));
+          _popupList.add(_popup(index, item, link));
+          break;
+        case FloatingToolbarItemType.custom:
+          _customIndices.add(index);
+          _toolbarButtons.add(_custom(noPad, item));
+          break;
       }
     }
+  }
+
+  List<Widget> get _expandedButtons {
+    if (_customIndices.isEmpty) {
+      return _toolbarButtons.map((e) => Expanded(child: e)).toList();
+    }
+    List<Widget> buttons = [];
+    for (int index = 0; index < _toolbarButtons.length; index++) {
+      if (_customIndices.contains(index)) {
+        buttons.add(_toolbarButtons[index]);
+      } else {
+        buttons.add(Expanded(
+          child: _toolbarButtons[index],
+        ));
+      }
+    }
+    return buttons;
   }
 
   @override
@@ -472,7 +536,7 @@ class FloatingToolbar extends StatelessWidget {
               direction: _toolbarDirection,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
-              children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
+              children: _expandedButtons,
             ),
           ),
         );
@@ -483,7 +547,7 @@ class FloatingToolbar extends StatelessWidget {
               direction: _toolbarDirection,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
-              children: _toolbarButtons.map((e) => Expanded(child: e)).toList(),
+              children: _expandedButtons,
             ),
           ),
         );

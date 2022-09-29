@@ -98,9 +98,23 @@ class _MyHomePageState extends State<MyHomePage> {
     _toolbarAlignment = ToolbarAlignment.bottomCenterHorizontal;
     for (int index = 0; index < _iconList.length; index++) {
       String label = _numberNames[index]!;
-      if (index == _reactiveIndex) {
+      if (index == 0) {
         _primaryItems.add(
           FloatingToolbarItem.custom(
+            SizedBox(
+              width: 200.0,
+              child: TextField(
+                decoration: InputDecoration(
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder()),
+              ),
+            ),
+          ),
+        );
+      } else if (index == _reactiveIndex) {
+        _primaryItems.add(
+          FloatingToolbarItem.basic(
             IconicButton(
               controller: _reactiveController,
               iconData: _iconList[index],
@@ -141,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         }
         _primaryItems.add(
-          FloatingToolbarItem.standard(
+          FloatingToolbarItem.popup(
             IconicItem(
               iconData: _iconList[index],
               label: label,
@@ -180,6 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
             FloatingToolbar(
               selectNotifier: _selectNotifier,
               items: _primaryItems,
+              equalizeButton: true,
               backgroundColor: Theme.of(context).primaryColor,
               preferTooltipBelow: false,
               alignment: _toolbarAlignment,
