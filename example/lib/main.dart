@@ -91,9 +91,15 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
 
+  FocusNode _focusNode = FocusNode();
+  ValueNotifier<bool> _hasFocus = ValueNotifier(false);
+
+  void _focusListener() => _hasFocus.value = _focusNode.hasFocus;
+
   @override
   void initState() {
     super.initState();
+    _focusNode.addListener(_focusListener);
     _margin = EdgeInsets.all(4.0);
     _toolbarAlignment = ToolbarAlignment.bottomCenterHorizontal;
     for (int index = 0; index < _iconList.length; index++) {
@@ -101,15 +107,22 @@ class _MyHomePageState extends State<MyHomePage> {
       if (index == 0) {
         _primaryItems.add(
           FloatingToolbarItem.custom(
-            SizedBox(
-              width: 200.0,
-              child: TextField(
-                decoration: InputDecoration(
-                    fillColor: Colors.white,
-                    filled: true,
-                    border: OutlineInputBorder()),
-              ),
-            ),
+            ValueListenableBuilder<bool>(
+                valueListenable: _hasFocus,
+                builder: (context, value, _) {
+                  return AnimatedContainer(
+                    duration: Duration(milliseconds: 500),
+                    width: value ? 250.0 : 200.0,
+                    child: TextField(
+                      focusNode: _focusNode,
+                      decoration: InputDecoration(
+                        fillColor: Colors.white,
+                        filled: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  );
+                }),
           ),
         );
       } else if (index == _reactiveIndex) {
@@ -215,6 +228,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _popupControllers.forEach((element) => element.dispose());
     _reactiveController.dispose();
     _selectNotifier.dispose();
+    _focusNode.removeListener(_focusListener);
+    _focusNode.dispose();
+    _hasFocus.dispose();
     super.dispose();
   }
 }

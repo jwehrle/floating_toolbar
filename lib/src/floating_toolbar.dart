@@ -75,15 +75,12 @@ class FloatingToolbarItem {
   /// Used to make a toolbar item that is a SizedBox where the dimension set
   /// is the axis of the toolbar. This is necessary to prevent unbounded
   /// dimensions.
-  FloatingToolbarItem.custom(SizedBox custom)
-      : assert(custom.width != null || custom.height != null),
-        this._custom = custom,
+  FloatingToolbarItem.custom(Widget custom)
+      : this._custom = custom,
         this.type = FloatingToolbarItemType.custom,
         this._basicButton = null,
         this._popups = null,
         this._popupButton = null;
-
-  // final bool isPopup;
 
   /// IconicItem used in standard mode to build radio button style toolbar
   /// button
@@ -104,7 +101,6 @@ class FloatingToolbarItem {
   /// If true, [_basicButton] is not null but both [_popupButton] and [_popups]
   /// are null. If false, both [_popupButton] and [_popups] are not null but
   /// [_basicButton] is null.
-  // final bool isBasic;
 
   /// For use when no popups are to be associated with this toolbar button
   final IconicButton? _basicButton;
@@ -113,10 +109,8 @@ class FloatingToolbarItem {
     return _basicButton!;
   }
 
-  // final bool isText;
-
-  final SizedBox? _custom;
-  SizedBox get custom {
+  final Widget? _custom;
+  Widget get custom {
     assert(type == FloatingToolbarItemType.custom);
     return _custom!;
   }
