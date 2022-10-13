@@ -48,6 +48,7 @@ class FloatingToolbar extends StatelessWidget {
       ),
     ),
     this.margin = const EdgeInsets.all(2.0),
+    this.modalMargin = 12.0,
     this.clip = Clip.antiAlias,
     this.elevation = 2.0,
     this.onValueChanged,
@@ -93,6 +94,8 @@ class FloatingToolbar extends StatelessWidget {
 
   /// Padding around the toolbar. Default is 2.0 on all sides.
   final EdgeInsets margin;
+
+  final double modalMargin;
 
   /// The Clip behavior to assign to the ScrollView the toolbar is wrapped in.
   /// Default is antiAlias.
@@ -161,10 +164,9 @@ class FloatingToolbar extends StatelessWidget {
   late final Axis _popupDirection;
   late final EdgeInsets _popupSpacing;
   late final Alignment _targetAnchor;
-  late final Alignment _toolbarAnchor;
   late final Alignment _followerAnchor;
-  late final Alignment _modalAnchor;
   late final Offset _followerOffset;
+  late final Alignment _modalAlignment;
 
   void _assignBasics() {
     switch (alignment) {
@@ -176,9 +178,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
-        _toolbarAnchor = Alignment.topRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAnchor = Alignment.topLeft;
+        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.centerLeftVertical:
@@ -189,9 +190,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
-        _toolbarAnchor = Alignment.topRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAnchor = Alignment.topLeft;
+        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.bottomLeftVertical:
@@ -202,9 +202,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(left: popupSpacing);
         _targetAnchor = Alignment.centerRight;
-        _toolbarAnchor = Alignment.bottomRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAnchor = Alignment.bottomLeft;
+        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.topLeftHorizontal:
@@ -215,9 +214,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
-        _toolbarAnchor = Alignment.bottomLeft;
         _followerAnchor = Alignment.topCenter;
-        _modalAnchor = Alignment.topLeft;
+        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topCenterHorizontal:
@@ -228,9 +226,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
-        _toolbarAnchor = Alignment.bottomLeft;
         _followerAnchor = Alignment.topCenter;
-        _modalAnchor = Alignment.topLeft;
+        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightHorizontal:
@@ -241,9 +238,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(top: popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
-        _toolbarAnchor = Alignment.bottomRight;
         _followerAnchor = Alignment.topCenter;
-        _modalAnchor = Alignment.topRight;
+        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightVertical:
@@ -254,9 +250,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
-        _toolbarAnchor = Alignment.topLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAnchor = Alignment.topRight;
+        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.centerRightVertical:
@@ -267,9 +262,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
-        _toolbarAnchor = Alignment.topLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAnchor = Alignment.topRight;
+        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomRightVertical:
@@ -280,9 +274,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(top: buttonSpacing);
         _popupSpacing = EdgeInsets.only(right: popupSpacing);
         _targetAnchor = Alignment.centerLeft;
-        _toolbarAnchor = Alignment.bottomLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAnchor = Alignment.bottomRight;
+        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomLeftHorizontal:
@@ -293,9 +286,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
-        _toolbarAnchor = Alignment.topLeft;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAnchor = Alignment.bottomLeft;
+        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -contentPadding.top);
         break;
       case ToolbarAlignment.bottomCenterHorizontal:
@@ -306,9 +298,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
-        _toolbarAnchor = Alignment.topLeft;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAnchor = Alignment.bottomLeft;
+        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -contentPadding.top);
         break;
       case ToolbarAlignment.bottomRightHorizontal:
@@ -319,9 +310,8 @@ class FloatingToolbar extends StatelessWidget {
         _buttonSpacing = EdgeInsets.only(left: buttonSpacing);
         _popupSpacing = EdgeInsets.only(bottom: popupSpacing);
         _targetAnchor = Alignment.topCenter;
-        _toolbarAnchor = Alignment.topRight;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAnchor = Alignment.bottomRight;
+        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -contentPadding.top);
         break;
     }
@@ -432,13 +422,9 @@ class FloatingToolbar extends StatelessWidget {
       index: index,
       listenable: selectNotifier,
       builder: item.modalBuilder,
-      spacing: _popupSpacing,
-      followerModalData: FollowerModalData(
-        link: link,
-        targetAnchor: _toolbarAnchor,
-        followerAnchor: _modalAnchor,
-        offset: _followerOffset,
-      ),
+      margin: modalMargin,
+      alignment: _modalAlignment,
+      link: link,
     );
   }
 
