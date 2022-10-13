@@ -134,10 +134,16 @@ class _MyHomePageState extends State<MyHomePage> {
               tooltip: 'This is $label',
             ),
             Builder(
-              builder: (context) => Container(
-                height: 60.0,
-                width: 120.0,
-                color: Colors.deepOrangeAccent,
+              builder: (context) => Material(
+                elevation: 6.0,
+                child: Ink(
+                  height: 60.0,
+                  width: 120.0,
+                  color: Colors.deepOrangeAccent,
+                  child: InkWell(
+                    onTap: () {},
+                  ),
+                ),
               ),
             ),
           ),

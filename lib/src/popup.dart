@@ -135,33 +135,21 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
   }
 }
 
-class FollowerModalData {
-  final LayerLink link;
-  final Alignment targetAnchor;
-  final Alignment followerAnchor;
-  final Offset offset;
-
-  FollowerModalData({
-    required this.link,
-    required this.targetAnchor,
-    required this.followerAnchor,
-    required this.offset,
-  });
-}
-
 class ToolbarModal extends StatefulWidget {
   final ValueListenable<int?> listenable;
+  final Alignment alignment;
   final int index;
-  final FollowerModalData followerModalData;
-  final EdgeInsets spacing;
+  final double margin;
+  final LayerLink link;
   final Builder builder;
 
   const ToolbarModal({
     Key? key,
     required this.listenable,
+    required this.alignment,
     required this.index,
-    required this.followerModalData,
-    required this.spacing,
+    required this.link,
+    required this.margin,
     required this.builder,
   }) : super(key: key);
 
@@ -200,20 +188,15 @@ class ToolbarModalState extends State<ToolbarModal>
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 0.0,
-      top: 0.0,
-      child: CompositedTransformFollower(
-        link: widget.followerModalData.link,
-        targetAnchor: widget.followerModalData.targetAnchor,
-        followerAnchor: widget.followerModalData.followerAnchor,
-        offset: widget.followerModalData.offset,
-        child: Padding(
-          padding: widget.spacing,
-          child: ScaleTransition(
-            scale: _scaleController.view,
-            child: widget.builder.build(context),
-          ),
+    double toolbarHeight = widget.link.leaderSize?.height ?? 0.0;
+    double bottomPadding = widget.margin + toolbarHeight;
+    return Align(
+      alignment: widget.alignment,
+      child: Padding(
+        padding: EdgeInsets.only(bottom: bottomPadding),
+        child: ScaleTransition(
+          scale: _scaleController.view,
+          child: widget.builder.build(context),
         ),
       ),
     );
