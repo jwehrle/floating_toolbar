@@ -111,7 +111,7 @@ class FloatingToolbar extends StatefulWidget {
 
   final bool modalBarrier;
 
-  final ValueListenable<int?>? selectionChannel;
+  final ButtonDismisser? buttonDismisser;
 
   FloatingToolbar({
     Key? key,
@@ -141,7 +141,7 @@ class FloatingToolbar extends StatefulWidget {
     this.buttonWaitDuration = const Duration(seconds: 2),
     this.buttonCurve = Curves.linear,
     this.modalBarrier = true,
-    this.selectionChannel,
+    this.buttonDismisser,
   }) : super(key: key);
 
   @override
@@ -491,8 +491,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     }
   }
 
-  void _selectChannelListener() =>
-      _selectNotifier.value = widget.selectionChannel!.value;
+  void _dismissButtons() => _selectNotifier.value = null;
 
   @override
   void initState() {
@@ -500,8 +499,8 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     _assignBasics();
     _assignWidgets();
     _selectNotifier.addListener(_barrierListener);
-    if (widget.selectionChannel != null) {
-      widget.selectionChannel!.addListener(_selectChannelListener);
+    if (widget.buttonDismisser != null) {
+      widget.buttonDismisser!.addListener(_dismissButtons);
     }
   }
 
@@ -587,7 +586,25 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   @override
   void dispose() {
     _selectNotifier.removeListener(_barrierListener);
-    widget.selectionChannel?.addListener(_selectChannelListener);
+    widget.buttonDismisser?.addListener(_dismissButtons);
     super.dispose();
+  }
+}
+
+class ButtonDismisser {
+  final List<VoidCallback> _listeners = [];
+
+  void addListener(VoidCallback listener) {
+    _listeners.add(listener);
+  }
+
+  void removeListener(VoidCallback listener) {
+    _listeners.remove(listener);
+  }
+
+  void dismiss() {
+    for (VoidCallback listener in _listeners) {
+      listener();
+    }
   }
 }
