@@ -61,7 +61,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<FloatingToolbarItem> _primaryItems = [];
   late EdgeInsets _margin;
   late ToolbarAlignment _toolbarAlignment;
-  final ValueNotifier<int?> _selectNotifier = ValueNotifier(null);
 
   void _snack() {
     String text = lorem[_loremIndex % lorem.length];
@@ -214,21 +213,29 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             Center(
-              child: SwitchListTile.adaptive(
-                title: Text('Enable button'),
-                value: _reactiveButtonEnabled,
-                onChanged: (value) => setState(() {
-                  _reactiveButtonEnabled = value;
-                  if (_reactiveButtonEnabled) {
-                    _reactiveController.enable();
-                  } else {
-                    _reactiveController.disable();
-                  }
-                }),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(hintText: 'Hint'),
+                  ),
+                  Padding(padding: EdgeInsets.only(bottom: 16.0)),
+                  SwitchListTile.adaptive(
+                    title: Text('Enable button'),
+                    value: _reactiveButtonEnabled,
+                    onChanged: (value) => setState(() {
+                      _reactiveButtonEnabled = value;
+                      if (_reactiveButtonEnabled) {
+                        _reactiveController.enable();
+                      } else {
+                        _reactiveController.disable();
+                      }
+                    }),
+                  ),
+                ],
               ),
             ),
             FloatingToolbar(
-              selectNotifier: _selectNotifier,
               items: _primaryItems,
               equalizeButton: true,
               backgroundColor: Theme.of(context).primaryColor,
@@ -250,7 +257,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _popupControllers.forEach((element) => element.dispose());
     _reactiveController.dispose();
-    _selectNotifier.dispose();
     _focusNode.removeListener(_focusListener);
     _focusNode.dispose();
     _hasFocus.dispose();
