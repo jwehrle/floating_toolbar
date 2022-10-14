@@ -611,4 +611,8 @@ class ButtonDismisser {
       listener();
     }
   }
+
+  void dispose() {
+    _listeners.clear();
+  }
 }
