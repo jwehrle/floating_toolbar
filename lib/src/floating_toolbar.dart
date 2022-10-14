@@ -1,6 +1,7 @@
 library floating_toolbar;
 
 import 'package:floating_toolbar/src/popup.dart';
+import 'package:flutter/foundation.dart';
 import 'package:iconic_button/button.dart';
 import 'package:flutter/material.dart';
 
@@ -110,6 +111,8 @@ class FloatingToolbar extends StatefulWidget {
 
   final bool modalBarrier;
 
+  final ValueListenable<int?>? selectionChannel;
+
   FloatingToolbar({
     Key? key,
     required this.items,
@@ -138,6 +141,7 @@ class FloatingToolbar extends StatefulWidget {
     this.buttonWaitDuration = const Duration(seconds: 2),
     this.buttonCurve = Curves.linear,
     this.modalBarrier = true,
+    this.selectionChannel,
   }) : super(key: key);
 
   @override
@@ -149,7 +153,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   /// null or set value to null if already selected. This ValueNotifier can be
   /// used to remotely trigger popups or to incorporate
   /// [FloatingToolbarItem.basic] into the standard behavior of FloatingToolbar.
-  final ValueNotifier<int?> selectNotifier = ValueNotifier(null);
+  final ValueNotifier<int?> _selectNotifier = ValueNotifier(null);
 
   final LayerLink _toolbarLink = LayerLink();
 
@@ -324,7 +328,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   }
 
   void _onTap(int index) {
-    selectNotifier.value = selectNotifier.value == index ? null : index;
+    _selectNotifier.value = _selectNotifier.value == index ? null : index;
     if (widget.onValueChanged != null) {
       widget.onValueChanged!(index);
     }
@@ -355,7 +359,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   Widget _button(int index, FloatingToolbarItem item) {
     return ValueListenableBuilder<int?>(
-      valueListenable: selectNotifier,
+      valueListenable: _selectNotifier,
       builder: (context, value, _) {
         return BaseIconicButton(
           state: index == value ? ButtonState.selected : ButtonState.unselected,
@@ -410,7 +414,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   Widget _popup(int index, FloatingToolbarItem item, LayerLink link) {
     return Popup(
       index: index,
-      listenable: selectNotifier,
+      listenable: _selectNotifier,
       itemBuilderList: item.popups,
       spacing: _popupSpacing,
       followerPopupData: FollowerPopupData(
@@ -426,7 +430,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   Widget _modal(int index, FloatingToolbarItem item, LayerLink link) {
     return ToolbarModal(
       index: index,
-      listenable: selectNotifier,
+      listenable: _selectNotifier,
       builder: item.modalBuilder,
       margin: widget.modalMargin,
       alignment: _modalAlignment,
@@ -479,20 +483,26 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   }
 
   void _barrierListener() {
-    if (selectNotifier.value == null && _useModal) {
+    if (_selectNotifier.value == null && _useModal) {
       setState(() => _useModal = false);
     }
-    if (selectNotifier.value != null && !_useModal) {
+    if (_selectNotifier.value != null && !_useModal) {
       setState(() => _useModal = true);
     }
   }
+
+  void _selectChannelListener() =>
+      _selectNotifier.value = widget.selectionChannel!.value;
 
   @override
   void initState() {
     super.initState();
     _assignBasics();
     _assignWidgets();
-    selectNotifier.addListener(_barrierListener);
+    _selectNotifier.addListener(_barrierListener);
+    if (widget.selectionChannel != null) {
+      widget.selectionChannel!.addListener(_selectChannelListener);
+    }
   }
 
   @override
@@ -553,7 +563,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
             if (widget.modalBarrier && _useModal)
               ModalBarrier(
                 color: Colors.transparent,
-                onDismiss: () => selectNotifier.value = null,
+                onDismiss: () => _selectNotifier.value = null,
               ),
             AnimatedAlign(
               duration: widget.toolbarAnimationDuration,
@@ -576,7 +586,8 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   @override
   void dispose() {
-    selectNotifier.removeListener(_barrierListener);
+    _selectNotifier.removeListener(_barrierListener);
+    widget.selectionChannel?.addListener(_selectChannelListener);
     super.dispose();
   }
 }
