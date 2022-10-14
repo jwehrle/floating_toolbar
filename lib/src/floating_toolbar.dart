@@ -491,7 +491,11 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     }
   }
 
-  void _dismissButtons() => _selectNotifier.value = null;
+  void _dismissButtons() {
+    if (mounted) {
+      _selectNotifier.value = null;
+    }
+  }
 
   @override
   void initState() {
