@@ -27,7 +27,7 @@ class IconicItem {
 }
 
 /// The types of toolbar items [FloatingToolbar] accepts.
-enum FloatingToolbarItemType { basic, popup, custom, modal }
+enum FloatingToolbarItemType { basic, popup, custom }
 
 class FloatingToolbarItem {
   final FloatingToolbarItemType type;
@@ -42,8 +42,7 @@ class FloatingToolbarItem {
         this._popupButton = popupButton,
         this._popups = popups,
         this._basicButton = null,
-        this._custom = null,
-        this._modalBuilder = null;
+        this._custom = null;
 
   /// Used to insert a custom button into the [FloatingToolbar]. This button's
   /// selection is not controlled by [FloatingToolbar] and has no associated
@@ -53,8 +52,7 @@ class FloatingToolbarItem {
         this._basicButton = basicButton,
         this._custom = null,
         this._popupButton = null,
-        this._popups = null,
-        this._modalBuilder = null;
+        this._popups = null;
 
   /// Used to make a completely custom button with no popups. Do not use
   /// unbounded widgets.
@@ -63,23 +61,13 @@ class FloatingToolbarItem {
         this.type = FloatingToolbarItemType.custom,
         this._basicButton = null,
         this._popups = null,
-        this._popupButton = null,
-        this._modalBuilder = null;
-
-  FloatingToolbarItem.modalBuilder(IconicItem modalButton, Builder modalBuilder)
-      : this._modalBuilder = modalBuilder,
-        this.type = FloatingToolbarItemType.modal,
-        this._basicButton = null,
-        this._popups = null,
-        this._popupButton = modalButton,
-        this._custom = null;
+        this._popupButton = null;
 
   /// IconicItem used in standard mode to build radio button style toolbar
   /// button
   final IconicItem? _popupButton;
   IconicItem get popupButton {
-    assert(type == FloatingToolbarItemType.popup ||
-        type == FloatingToolbarItemType.modal);
+    assert(type == FloatingToolbarItemType.popup);
     return _popupButton!;
   }
 
@@ -89,12 +77,6 @@ class FloatingToolbarItem {
   List<PopupItemBuilder> get popups {
     assert(type == FloatingToolbarItemType.popup);
     return _popups!;
-  }
-
-  final Builder? _modalBuilder;
-  Builder get modalBuilder {
-    assert(type == FloatingToolbarItemType.modal);
-    return _modalBuilder!;
   }
 
   /// If true, [_basicButton] is not null but both [_popupButton] and [_popups]

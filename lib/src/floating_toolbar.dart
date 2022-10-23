@@ -1,7 +1,6 @@
 library floating_toolbar;
 
 import 'package:floating_toolbar/src/popup.dart';
-import 'package:flutter/foundation.dart';
 import 'package:iconic_button/button.dart';
 import 'package:flutter/material.dart';
 
@@ -159,13 +158,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   bool _useModal = false;
 
-  // keeps track of custom buttons and doesn't equalize their width
-  final Set<int> _customIndices = {};
-
-  // Filled in constructor body
-  final List<Widget> _toolbarButtons = [];
-  final List<Widget> _popupList = [];
-
   // Assigned in constructor body
   late final Alignment _toolbarAlignment;
   late final bool _isToolbarReverse;
@@ -176,7 +168,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   late final Alignment _targetAnchor;
   late final Alignment _followerAnchor;
   late final Offset _followerOffset;
-  late final Alignment _modalAlignment;
 
   void _assignBasics() {
     switch (widget.alignment) {
@@ -189,7 +180,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(widget.contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.centerLeftVertical:
@@ -201,7 +191,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(widget.contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.bottomLeftVertical:
@@ -213,7 +202,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(left: widget.popupSpacing);
         _targetAnchor = Alignment.centerRight;
         _followerAnchor = Alignment.centerLeft;
-        _modalAlignment = Alignment.centerLeft;
         _followerOffset = Offset(widget.contentPadding.right, 0.0);
         break;
       case ToolbarAlignment.topLeftHorizontal:
@@ -225,7 +213,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, widget.contentPadding.bottom);
         break;
       case ToolbarAlignment.topCenterHorizontal:
@@ -237,7 +224,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, widget.contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightHorizontal:
@@ -249,7 +235,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(top: widget.popupSpacing);
         _targetAnchor = Alignment.bottomCenter;
         _followerAnchor = Alignment.topCenter;
-        _modalAlignment = Alignment.topCenter;
         _followerOffset = Offset(0.0, widget.contentPadding.bottom);
         break;
       case ToolbarAlignment.topRightVertical:
@@ -261,7 +246,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-widget.contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.centerRightVertical:
@@ -273,7 +257,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-widget.contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomRightVertical:
@@ -285,7 +268,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(right: widget.popupSpacing);
         _targetAnchor = Alignment.centerLeft;
         _followerAnchor = Alignment.centerRight;
-        _modalAlignment = Alignment.centerRight;
         _followerOffset = Offset(-widget.contentPadding.left, 0.0);
         break;
       case ToolbarAlignment.bottomLeftHorizontal:
@@ -297,7 +279,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
       case ToolbarAlignment.bottomCenterHorizontal:
@@ -309,7 +290,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
       case ToolbarAlignment.bottomRightHorizontal:
@@ -321,7 +301,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         _popupSpacing = EdgeInsets.only(bottom: widget.popupSpacing);
         _targetAnchor = Alignment.topCenter;
         _followerAnchor = Alignment.bottomCenter;
-        _modalAlignment = Alignment.bottomCenter;
         _followerOffset = Offset(0.0, -widget.contentPadding.top);
         break;
     }
@@ -336,25 +315,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   bool _isAtStart(int index, int lastIndex) {
     return _isToolbarReverse ? index == lastIndex : index == 0;
-  }
-
-  Widget _basic(bool noPad, FloatingToolbarItem item) {
-    return noPad
-        ? item.basicButton
-        : Padding(
-            padding: _buttonSpacing,
-            child: item.basicButton,
-          );
-  }
-
-// custom doesn't have tap - just like basic doesn't
-  Widget _custom(bool noPad, FloatingToolbarItem item) {
-    return noPad
-        ? item.custom
-        : Padding(
-            padding: _buttonSpacing,
-            child: item.custom,
-          );
   }
 
   Widget _button(int index, FloatingToolbarItem item) {
@@ -378,104 +338,18 @@ class FloatingToolbarState extends State<FloatingToolbar> {
     );
   }
 
-  Widget _modalButton(
-    bool noPad,
-    int index,
-    FloatingToolbarItem item,
-  ) {
-    return noPad
-        ? _button(index, item)
-        : Padding(
-            padding: _buttonSpacing,
-            child: _button(index, item),
-          );
-  }
-
-  Widget _standard(
-    bool noPad,
-    int index,
-    FloatingToolbarItem item,
-    LayerLink link,
-  ) {
-    return noPad
-        ? CompositedTransformTarget(
-            link: link,
-            child: _button(index, item),
-          )
-        : Padding(
-            padding: _buttonSpacing,
-            child: CompositedTransformTarget(
-              link: link,
-              child: _button(index, item),
-            ),
-          );
-  }
-
-  Widget _popup(int index, FloatingToolbarItem item, LayerLink link) {
-    return Popup(
-      index: index,
-      listenable: _selectNotifier,
-      itemBuilderList: item.popups,
-      spacing: _popupSpacing,
-      followerPopupData: FollowerPopupData(
-        link: link,
-        direction: _popupDirection,
-        targetAnchor: _targetAnchor,
-        followerAnchor: _followerAnchor,
-        offset: _followerOffset,
-      ),
-    );
-  }
-
-  Widget _modal(int index, FloatingToolbarItem item, LayerLink link) {
-    return ToolbarModal(
-      index: index,
-      listenable: _selectNotifier,
-      builder: item.modalBuilder,
-      margin: widget.modalMargin,
-      alignment: _modalAlignment,
-      link: link,
-    );
-  }
-
-  void _assignWidgets() {
-    bool onlyOneButton = widget.items.length == 1;
-    int lastIndex = widget.items.length - 1;
-    for (int index = 0; index < widget.items.length; index++) {
-      FloatingToolbarItem item = widget.items[index];
-      bool noPad = onlyOneButton || _isAtStart(index, lastIndex);
-      final LayerLink link = LayerLink();
-      switch (item.type) {
-        case FloatingToolbarItemType.basic:
-          _toolbarButtons.add(_basic(noPad, item));
-          break;
-        case FloatingToolbarItemType.popup:
-          _toolbarButtons.add(_standard(noPad, index, item, link));
-          _popupList.add(_popup(index, item, link));
-          break;
-        case FloatingToolbarItemType.custom:
-          _customIndices.add(index);
-          _toolbarButtons.add(_custom(noPad, item));
-          break;
-        case FloatingToolbarItemType.modal:
-          _toolbarButtons.add(_modalButton(noPad, index, item));
-          _popupList.add(_modal(index, item, _toolbarLink));
-          break;
-      }
-    }
-  }
-
-  List<Widget> get _expandedButtons {
-    if (_customIndices.isEmpty) {
-      return _toolbarButtons.map((e) => Expanded(child: e)).toList();
+  List<Widget> _expandedButtons(
+      Set<int> customIndices, List<Widget> toolbarButtons) {
+    if (customIndices.isEmpty) {
+      return toolbarButtons.map((e) => Expanded(child: e)).toList();
     }
     List<Widget> buttons = [];
-    for (int index = 0; index < _toolbarButtons.length; index++) {
-      if (_customIndices.contains(index)) {
-        buttons.add(_toolbarButtons[index]);
+    for (int index = 0; index < toolbarButtons.length; index++) {
+      if (customIndices.contains(index)) {
+        buttons.add(toolbarButtons[index]);
       } else {
         buttons.add(Expanded(
-          child: _toolbarButtons[index],
+          child: toolbarButtons[index],
         ));
       }
     }
@@ -501,7 +375,6 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   void initState() {
     super.initState();
     _assignBasics();
-    _assignWidgets();
     _selectNotifier.addListener(_barrierListener);
     if (widget.buttonDismisser != null) {
       widget.buttonDismisser!.addListener(_dismissButtons);
@@ -510,6 +383,63 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 
   @override
   Widget build(BuildContext context) {
+    final Set<int> customIndices = {};
+    final List<Widget> toolbarButtons = [];
+    final List<Widget> _popupList = [];
+
+    final bool onlyOneButton = widget.items.length == 1;
+    final int lastIndex = widget.items.length - 1;
+    for (int index = 0; index < widget.items.length; index++) {
+      final FloatingToolbarItem item = widget.items[index];
+      final bool noPad = onlyOneButton || _isAtStart(index, lastIndex);
+      final LayerLink link = LayerLink();
+      switch (item.type) {
+        case FloatingToolbarItemType.basic:
+          toolbarButtons.add(
+            Padding(
+              padding: noPad ? EdgeInsets.zero : _buttonSpacing,
+              child: item.basicButton,
+            ),
+          );
+          break;
+        case FloatingToolbarItemType.popup:
+          toolbarButtons.add(
+            Padding(
+              padding: noPad ? EdgeInsets.zero : _buttonSpacing,
+              child: CompositedTransformTarget(
+                link: link,
+                child: _button(index, item),
+              ),
+            ),
+          );
+          _popupList.add(
+            Popup(
+              index: index,
+              listenable: _selectNotifier,
+              itemBuilderList: item.popups,
+              spacing: _popupSpacing,
+              followerPopupData: FollowerPopupData(
+                link: link,
+                direction: _popupDirection,
+                targetAnchor: _targetAnchor,
+                followerAnchor: _followerAnchor,
+                offset: _followerOffset,
+              ),
+            ),
+          );
+          break;
+        case FloatingToolbarItemType.custom:
+          customIndices.add(index);
+          toolbarButtons.add(
+            Padding(
+              padding: noPad ? EdgeInsets.zero : _buttonSpacing,
+              child: item.custom,
+            ),
+          );
+          break;
+      }
+    }
+
     Widget toolbar;
     if (widget.equalizeButton) {
       if (_toolbarDirection == Axis.horizontal) {
@@ -519,7 +449,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
               direction: _toolbarDirection,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
-              children: _expandedButtons,
+              children: _expandedButtons(customIndices, toolbarButtons),
             ),
           ),
         );
@@ -530,7 +460,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
               direction: _toolbarDirection,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
-              children: _expandedButtons,
+              children: _expandedButtons(customIndices, toolbarButtons),
             ),
           ),
         );
@@ -540,7 +470,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
         direction: _toolbarDirection,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
-        children: _toolbarButtons,
+        children: toolbarButtons,
       );
     }
     if (widget.useToolbarBody) {
