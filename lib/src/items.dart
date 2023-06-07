@@ -1,6 +1,6 @@
 import 'package:floating_toolbar/src/popup.dart';
 import 'package:flutter/material.dart';
-import 'package:iconic_button/button.dart';
+import 'package:iconic_button/iconic_button.dart';
 
 /// Used in conjunction with [FloatingToolbar.toolbarStyle] to build
 /// [IconicButton] for toolbar that is selected or unSelected based on toolbar
