@@ -81,8 +81,40 @@ class FloatingToolbar extends StatefulWidget {
   /// The background of the toolbar. Defaults to [Theme.primaryColor]
   final Color? backgroundColor;
 
-  /// The ButtonStyle applied to IconicButtons of the toolbar.
-  final ButtonStyle? toolbarStyle;
+  /// Whether to show an alert dot (usually indicative of a notification) on
+  /// top of this button. Defaults to false
+  final bool showAlertDot;
+
+  /// The color of the optional alert dot. Defaults to [Colors.red]
+  final Color alertDotColor;
+
+  /// The foreground color when selected and background color when unselected.
+  final Color? primary;
+
+  /// The background color when selected and foreground color when unselected.
+  final Color? onPrimary;
+
+  /// The foreground color when disabled.
+  final Color? onSurface;
+
+  /// Color of the shadow when elevation is > 0.0
+  final Color? shadowColor;
+
+  /// The elevation of the button, defaults to 0.0
+  final double? buttonElevation;
+
+  /// The TextStyle of the label, defaults to TextStyle()
+  final TextStyle? textStyle;
+
+  /// Padding around the foreground contents of the button. Defaults to
+  /// ThemeData.buttonTheme.padding
+  final EdgeInsetsGeometry? padding;
+
+  /// The shape of the button, by default a RoundedRectangle with radius of 4.0
+  final OutlinedBorder? buttonShape;
+
+  /// The splash factory, defaults to InkRipple.splashFactory
+  final InteractiveInkFeatureFactory? splashFactory;
 
   /// Animation duration of changes to the toolbar surrounding the buttons.
   /// Applied to changes in alignment, margin, and content padding. Default is
@@ -132,7 +164,6 @@ class FloatingToolbar extends StatefulWidget {
     this.onValueChanged,
     this.tooltipOffset,
     this.preferTooltipBelow,
-    this.toolbarStyle,
     this.useToolbarBody = true,
     this.equalizeButton = true,
     this.toolbarAnimationDuration = const Duration(milliseconds: 500),
@@ -141,6 +172,17 @@ class FloatingToolbar extends StatefulWidget {
     this.buttonCurve = Curves.linear,
     this.modalBarrier = true,
     this.buttonDismisser,
+    this.showAlertDot = false,
+    this.alertDotColor = Colors.red,
+    this.primary,
+    this.onPrimary,
+    this.onSurface,
+    this.shadowColor,
+    this.buttonElevation = 0.0,
+    this.textStyle,
+    this.padding,
+    this.buttonShape = kDefaultRectangularShape,
+    this.splashFactory,
   }) : super(key: key);
 
   @override
@@ -322,15 +364,26 @@ class FloatingToolbarState extends State<FloatingToolbar> {
       valueListenable: _selectNotifier,
       builder: (context, value, _) {
         return BaseIconicButton(
-          state: index == value ? ButtonState.selected : ButtonState.unselected,
+          isSelected: index == value,
+          isEnabled: true,
           iconData: item.popupButton.iconData,
           onPressed: () => _onTap(index),
           label: item.popupButton.label,
           tooltip: item.popupButton.tooltip,
-          style: widget.toolbarStyle,
+          showAlertDot: widget.showAlertDot,
+          alertDotColor: widget.alertDotColor,
+          primary: widget.primary,
+          onPrimary: widget.onPrimary,
+          onSurface: widget.onSurface,
+          shadowColor: widget.shadowColor,
+          elevation: widget.buttonElevation,
+          textStyle: widget.textStyle,
+          padding: widget.padding,
+          shape: widget.buttonShape,
+          splashFactory: widget.splashFactory,
           tooltipOffset: widget.tooltipOffset,
           preferTooltipBelow: widget.preferTooltipBelow,
-          changeDuration: widget.buttonChangeDuration,
+          animationDuration: widget.buttonChangeDuration,
           waitDuration: widget.buttonWaitDuration,
           curve: widget.buttonCurve,
         );

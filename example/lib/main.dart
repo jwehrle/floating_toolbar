@@ -1,5 +1,6 @@
 import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
+import 'package:iconic_button/iconic_button.dart';
 
 void main() {
   runApp(const MyApp());
@@ -55,12 +56,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int _reactiveIndex = 6;
   bool _reactiveButtonEnabled = true;
+  bool _reactiveButtonSelected = false;
   ButtonController _reactiveController = ButtonController();
   List<ButtonController> _popupControllers = [];
   int _loremIndex = 0;
   List<FloatingToolbarItem> _primaryItems = [];
   late EdgeInsets _margin;
   late ToolbarAlignment _toolbarAlignment;
+  ValueNotifier<String?> _displayTextNotifier = ValueNotifier(null);
 
   void _snack() {
     String text = lorem[_loremIndex % lorem.length];
@@ -79,9 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
         .then((value) => setState(() => _loremIndex++));
   }
 
-  void _enabledSnack() => ScaffoldMessenger.of(context).showSnackBar(
+  void _snackSelected() => ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Enabled!'),
+          content:
+              Text('You tapped the an enabled button and now it is selected'),
           action: SnackBarAction(
             label: 'OK',
             onPressed: () =>
@@ -89,6 +93,28 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       );
+
+  void _snackUnselected() => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('You tapped the an enabled button and now it is unselected'),
+          action: SnackBarAction(
+            label: 'OK',
+            onPressed: () =>
+                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          ),
+        ),
+      );
+
+  void _enabledButtonOnPressed() {
+    _reactiveButtonSelected = !_reactiveButtonSelected;
+    print(_reactiveButtonSelected);
+    if (_reactiveButtonSelected) {
+      _snackSelected();
+    } else {
+      _snackUnselected();
+    }
+  }
 
   FocusNode _focusNode = FocusNode();
   ValueNotifier<bool> _hasFocus = ValueNotifier(false);
@@ -114,10 +140,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     width: value ? 250.0 : 200.0,
                     child: TextField(
                       focusNode: _focusNode,
+                      onChanged: (text) => _displayTextNotifier.value = text,
                       decoration: InputDecoration(
                         fillColor: Colors.white,
                         filled: true,
                         border: OutlineInputBorder(),
+                        isDense: true,
+                        // isCollapsed: true,
                       ),
                     ),
                   );
@@ -130,8 +159,9 @@ class _MyHomePageState extends State<MyHomePage> {
             IconicButton(
               controller: _reactiveController,
               iconData: _iconList[index],
-              onPressed: _enabledSnack,
-              label: 'Enable',
+              onPressed: _enabledButtonOnPressed,
+              elevation: 0.0,
+              label: 'Diff',
               tooltip: 'This is the enabled/disabled button',
             ),
           ),
@@ -148,16 +178,15 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context, state, child) {
                 ThemeData theme = Theme.of(context);
                 return BaseIconicButton(
-                  state: state,
+                  isEnabled: state.contains(ButtonState.enabled),
+                  isSelected: state.contains(ButtonState.selected),
                   iconData: Icons.tag_faces,
-                  style: selectableStyleFrom(
-                    elevation: 4.0,
-                    shape: CircleBorder(),
-                    padding: EdgeInsets.all(8.0),
-                    primary: theme.primaryColor,
-                    onPrimary: theme.colorScheme.onPrimary,
-                    onSurface: theme.colorScheme.onSurface,
-                  ),
+                  elevation: 4.0,
+                  shape: CircleBorder(),
+                  padding: EdgeInsets.all(8.0),
+                  primary: theme.primaryColor,
+                  onPrimary: theme.colorScheme.onPrimary,
+                  onSurface: theme.colorScheme.onSurface,
                   onPressed: _snack,
                   preferTooltipBelow: false,
                   tooltip: 'Popup tooltip!',
@@ -182,6 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -193,12 +223,19 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextField(
-                    decoration: InputDecoration(hintText: 'Hint'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ValueListenableBuilder<String?>(
+                        valueListenable: _displayTextNotifier,
+                        builder: (context, value, _) {
+                          return Text(value ?? 'Enter text in toolbar');
+                        }),
                   ),
                   Padding(padding: EdgeInsets.only(bottom: 16.0)),
                   SwitchListTile.adaptive(
-                    title: Text('Enable button'),
+                    title: Text('Enable/Disable Button'),
+                    subtitle:
+                        Text('Scroll to find the button that says Enable'),
                     value: _reactiveButtonEnabled,
                     onChanged: (value) => setState(() {
                       _reactiveButtonEnabled = value;
@@ -220,9 +257,15 @@ class _MyHomePageState extends State<MyHomePage> {
               alignment: _toolbarAlignment,
               margin: _margin,
               contentPadding: EdgeInsets.all(4.0),
-              popupSpacing: 4.0,
+              popupSpacing: 8.0,
               buttonSpacing: 4.0,
-              onValueChanged: (key) => setState(() => print('Pressed $key')),
+              primary: theme.primaryColor,
+              onPrimary: theme.colorScheme.onPrimary,
+              onSurface: theme.colorScheme.onSurface,
+              padding: EdgeInsets.zero,
+              onValueChanged: (index) {
+                print(index);
+              },
             ),
           ],
         ),
@@ -234,6 +277,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _popupControllers.forEach((element) => element.dispose());
     _reactiveController.dispose();
+    _displayTextNotifier.dispose();
     _focusNode.removeListener(_focusListener);
     _focusNode.dispose();
     _hasFocus.dispose();
