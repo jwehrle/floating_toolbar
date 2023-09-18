@@ -6,18 +6,18 @@ import 'package:iconic_button/iconic_button.dart';
 /// Encapsulates parameters needed for CompositedTransformFollower on which
 /// [Popup] is based.
 class FollowerPopupData {
-  final LayerLink link;
+  final LayerLink buttonLink;
   final Axis direction;
-  final Alignment targetAnchor;
-  final Alignment followerAnchor;
-  final Offset offset;
+  final Alignment buttonAnchor;
+  final Alignment popupAnchor;
+  final Offset popupOffset;
 
   FollowerPopupData({
-    required this.link,
+    required this.buttonLink,
     required this.direction,
-    required this.targetAnchor,
-    required this.followerAnchor,
-    required this.offset,
+    required this.buttonAnchor,
+    required this.popupAnchor,
+    required this.popupOffset,
   });
 }
 
@@ -36,15 +36,15 @@ class PopupItemBuilder {
 }
 
 /// Shows or hides popup items which are built from a list of [itemBuilderList]
-/// based on [listenable] value comparison to [index].
+/// based on [selectionListenable] value comparison to [index].
 class Popup extends StatefulWidget {
   const Popup({
     Key? key,
     required this.index,
-    required this.listenable,
+    required this.selectionListenable,
     required this.itemBuilderList,
     required this.spacing,
-    required this.followerPopupData,
+    required this.popupData,
   }) : super(key: key);
 
   /// Which toolbar button this popup is associated with
@@ -52,7 +52,7 @@ class Popup extends StatefulWidget {
 
   /// Event changes in the toolbar button selected determine whether these
   /// popup elements are shown or hidden
-  final ValueListenable<int?> listenable;
+  final ValueListenable<int?> selectionListenable;
 
   /// Builder for each popup element
   final List<PopupItemBuilder> itemBuilderList;
@@ -62,7 +62,7 @@ class Popup extends StatefulWidget {
 
   /// Parameters used for the CompositedTransformFollower on which this calls is
   /// based.
-  final FollowerPopupData followerPopupData;
+  final FollowerPopupData popupData;
 
   @override
   State<StatefulWidget> createState() => PopupState();
@@ -72,7 +72,7 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
   late final AnimationController _scaleController;
 
   void _onSelectListener() {
-    if (widget.listenable.value == widget.index) {
+    if (widget.selectionListenable.value == widget.index) {
       if (_scaleController.status == AnimationStatus.dismissed) {
         _scaleController.forward();
       }
@@ -90,10 +90,10 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
       vsync: this,
       lowerBound: 0.0,
       upperBound: 1.0,
-      value: widget.listenable.value == widget.index ? 1.0 : 0.0,
+      value: widget.selectionListenable.value == widget.index ? 1.0 : 0.0,
       duration: kThemeAnimationDuration,
     );
-    widget.listenable.addListener(_onSelectListener);
+    widget.selectionListenable.addListener(_onSelectListener);
   }
 
   Widget _itemToWidget(PopupItemBuilder item) => Padding(
@@ -113,12 +113,12 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
       left: 0.0,
       top: 0.0,
       child: CompositedTransformFollower(
-        link: widget.followerPopupData.link,
-        targetAnchor: widget.followerPopupData.targetAnchor,
-        followerAnchor: widget.followerPopupData.followerAnchor,
-        offset: widget.followerPopupData.offset,
+        link: widget.popupData.buttonLink,
+        targetAnchor: widget.popupData.buttonAnchor,
+        followerAnchor: widget.popupData.popupAnchor,
+        offset: widget.popupData.popupOffset,
         child: Flex(
-          direction: widget.followerPopupData.direction,
+          direction: widget.popupData.direction,
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: widget.itemBuilderList.map(_itemToWidget).toList(),
@@ -129,7 +129,7 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    widget.listenable.removeListener(_onSelectListener);
+    widget.selectionListenable.removeListener(_onSelectListener);
     _scaleController.dispose();
     super.dispose();
   }
