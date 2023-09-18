@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:iconic_button/iconic_button.dart';
@@ -80,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .closed
         .then((value) => setState(() => _loremIndex++));
+        _itemSelector.selected = null;
   }
 
   void _snackSelected() => ScaffoldMessenger.of(context).showSnackBar(
@@ -118,6 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   FocusNode _focusNode = FocusNode();
   ValueNotifier<bool> _hasFocus = ValueNotifier(false);
+  ItemSelector _itemSelector = ItemSelector();
 
   void _focusListener() => _hasFocus.value = _focusNode.hasFocus;
 
@@ -266,6 +270,10 @@ class _MyHomePageState extends State<MyHomePage> {
               onValueChanged: (index) {
                 print(index);
               },
+              itemSelector: _itemSelector,
+              modalBarrier: true,
+              barrierColor: Colors.grey.shade300.withOpacity(0.5),
+              blur: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
             ),
           ],
         ),
@@ -281,6 +289,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _focusNode.removeListener(_focusListener);
     _focusNode.dispose();
     _hasFocus.dispose();
+    _itemSelector.dispose();
     super.dispose();
   }
 }
