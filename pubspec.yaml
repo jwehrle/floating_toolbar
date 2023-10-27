@@ -15,7 +15,7 @@ dependencies:
 
   material_design_icons_flutter:
   collection_value_notifier: ^1.0.0
-  iconic_button: ^1.2.0
+  iconic_button: ^1.3.0
 
 dev_dependencies:
   flutter_test:

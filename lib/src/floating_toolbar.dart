@@ -81,6 +81,7 @@ class FloatingToolbar extends StatefulWidget {
     this.modalBarrier = true,
     this.showAlertDot = false,
     this.alertDotColor = Colors.red,
+    this.toolbarButtonStyle,
     this.primary,
     this.onPrimary,
     this.onSurface,
@@ -149,6 +150,16 @@ class FloatingToolbar extends StatefulWidget {
 
   /// The color of the optional alert dot. Defaults to [Colors.red]
   final Color alertDotColor;
+
+  /// Optional style for toolbar buttons (not popup buttons)
+  /// If provided, the non-null fields of this style are preferred over
+  /// inherited IconicButtonTheme and any other style-related parameters 
+  /// provided in this constructor.
+  /// Practically speaking, if you provide [toolbarButtonStyle] don't 
+  /// bother providing [primary], [onPrimary], [onSurface], 
+  /// [shadowColor], [elevation], [shape], [textStyle], [padding], 
+  /// [buttonChangeDuration], or [splashFactory]
+  final ButtonStyle? toolbarButtonStyle;
 
   /// The foreground color when selected and background color when unselected.
   final Color? primary;
@@ -257,6 +268,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
           tooltip: item.popupItem.tooltip,
           showAlertDot: widget.showAlertDot,
           alertDotColor: widget.alertDotColor,
+          style: widget.toolbarButtonStyle,
           primary: widget.primary,
           onPrimary: widget.onPrimary,
           onSurface: widget.onSurface,
