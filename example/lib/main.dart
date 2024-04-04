@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:iconic_button/iconic_button.dart';
@@ -64,10 +62,12 @@ class _MyHomePageState extends State<MyHomePage> {
   int _loremIndex = 0;
   List<FloatingToolbarItem> _primaryItems = [];
   late EdgeInsets _margin;
-  late ToolbarAlignment _toolbarAlignment;
+  final EdgeInsets _buttonContentPadding =
+      EdgeInsets.symmetric(horizontal: 8.0);
   ValueNotifier<String?> _displayTextNotifier = ValueNotifier(null);
 
   void _snack() {
+    // _hideIndices.value = {2};
     String text = lorem[_loremIndex % lorem.length];
     ScaffoldMessenger.of(context)
         .showSnackBar(
@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .closed
         .then((value) => setState(() => _loremIndex++));
-        _itemSelector.selected = null;
+    _itemSelector.selected = null;
   }
 
   void _snackSelected() => ScaffoldMessenger.of(context).showSnackBar(
@@ -122,15 +122,20 @@ class _MyHomePageState extends State<MyHomePage> {
   FocusNode _focusNode = FocusNode();
   ValueNotifier<bool> _hasFocus = ValueNotifier(false);
   ItemSelector _itemSelector = ItemSelector();
+  Set<int> _hideIndices = {};
 
-  void _focusListener() => _hasFocus.value = _focusNode.hasFocus;
+  void _focusListener() {
+    _hasFocus.value = _focusNode.hasFocus;
+    setState(() {
+      _margin = _focusNode.hasFocus ? EdgeInsets.zero : EdgeInsets.all(4.0);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _focusNode.addListener(_focusListener);
     _margin = EdgeInsets.all(4.0);
-    _toolbarAlignment = ToolbarAlignment.bottomCenterHorizontal;
     for (int index = 0; index < _iconList.length; index++) {
       String label = _numberNames[index]!;
       if (index == 0) {
@@ -144,8 +149,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     width: value ? 250.0 : 200.0,
                     child: TextField(
                       focusNode: _focusNode,
+                      onSubmitted: (value) {
+                        if (value.toLowerCase().contains('hide')) {
+                          setState(() => _hideIndices = {1});
+                        }
+                        if (value.toLowerCase().contains('show')) {
+                          setState(() => _hideIndices = {});
+                        }
+                      },
                       onChanged: (text) => _displayTextNotifier.value = text,
                       decoration: InputDecoration(
+                        hintText: '\"hide\" or \"show\"',
                         fillColor: Colors.white,
                         filled: true,
                         border: OutlineInputBorder(),
@@ -232,6 +246,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: ValueListenableBuilder<String?>(
                         valueListenable: _displayTextNotifier,
                         builder: (context, value, _) {
+                          if (value?.contains('hide') ?? false) {
+                            value = 'Hiding $_hideIndices';
+                          }
+                          if (value?.contains('show') ?? false) {
+                            value = 'Showing all indicies';
+                          }
                           return Text(value ?? 'Enter text in toolbar');
                         }),
                   ),
@@ -255,25 +275,24 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             FloatingToolbar(
               items: _primaryItems,
-              equalizeButton: true,
-              backgroundColor: Theme.of(context).primaryColor,
-              preferTooltipBelow: false,
-              alignment: _toolbarAlignment,
-              margin: _margin,
-              contentPadding: EdgeInsets.all(4.0),
-              popupSpacing: 8.0,
-              buttonSpacing: 4.0,
-              primary: theme.primaryColor,
-              onPrimary: theme.colorScheme.onPrimary,
-              onSurface: theme.colorScheme.onSurface,
-              padding: EdgeInsets.zero,
-              onValueChanged: (index) {
-                print(index);
-              },
+              toolbarStyle: ToolbarStyle.bottomCenterHorizontal(
+                margin: _margin,
+                backgroundColor: theme.primaryColor,
+              ),
+              toolbarButtonStyle: ToolbarButtonStyle(
+                padding: _buttonContentPadding,
+                preferTooltipBelow: false,
+                equalizedSize: findEqualizedSize(
+                  context: context,
+                  items: _primaryItems,
+                  textStyle: theme.textTheme.labelSmall,
+                  padding: _buttonContentPadding,
+                ),
+              ),
+              onValueChanged: (index) => print(index),
               itemSelector: _itemSelector,
-              modalBarrier: true,
-              barrierColor: Colors.grey.shade300.withOpacity(0.5),
-              blur: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+              barrier: ToolbarBarrier(),
+              hide: _hideIndices,
             ),
           ],
         ),
