@@ -2,9 +2,10 @@ import 'package:collection_value_notifier/collection_value_notifier.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconic_button/iconic_button.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 /// Encapsulates parameters needed for CompositedTransformFollower on which
-/// [Popup] is based.
+/// [PopupCollection] is based.
 class FollowerPopupData {
   final LayerLink buttonLink;
   final Axis direction;
@@ -37,14 +38,15 @@ class PopupItemBuilder {
 
 /// Shows or hides popup items which are built from a list of [itemBuilderList]
 /// based on [selectionListenable] value comparison to [index].
-class Popup extends StatefulWidget {
-  const Popup({
+class PopupCollection extends StatelessWidget {
+  const PopupCollection({
     Key? key,
     required this.index,
     required this.selectionListenable,
     required this.itemBuilderList,
     required this.spacing,
     required this.popupData,
+    required this.duration,
   }) : super(key: key);
 
   /// Which toolbar button this popup is associated with
@@ -64,48 +66,7 @@ class Popup extends StatefulWidget {
   /// based.
   final FollowerPopupData popupData;
 
-  @override
-  State<StatefulWidget> createState() => PopupState();
-}
-
-class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
-  late final AnimationController _scaleController;
-
-  void _onSelectListener() {
-    if (widget.selectionListenable.value == widget.index) {
-      if (_scaleController.status == AnimationStatus.dismissed) {
-        _scaleController.forward();
-      }
-    } else {
-      if (_scaleController.status == AnimationStatus.completed) {
-        _scaleController.reverse();
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scaleController = AnimationController(
-      vsync: this,
-      lowerBound: 0.0,
-      upperBound: 1.0,
-      value: widget.selectionListenable.value == widget.index ? 1.0 : 0.0,
-      duration: kThemeAnimationDuration,
-    );
-    widget.selectionListenable.addListener(_onSelectListener);
-  }
-
-  Widget _itemToWidget(PopupItemBuilder item) => Padding(
-        padding: widget.spacing,
-        child: ScaleTransition(
-          scale: _scaleController.view,
-          child: SetListenableBuilder<ButtonState>(
-            valueListenable: item.controller,
-            builder: item.builder,
-          ),
-        ),
-      );
+  final Duration duration;
 
   @override
   Widget build(BuildContext context) {
@@ -113,25 +74,83 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
       left: 0.0,
       top: 0.0,
       child: CompositedTransformFollower(
-        link: widget.popupData.buttonLink,
-        targetAnchor: widget.popupData.buttonAnchor,
-        followerAnchor: widget.popupData.popupAnchor,
-        offset: widget.popupData.popupOffset,
-        child: Flex(
-          direction: widget.popupData.direction,
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: widget.itemBuilderList.map(_itemToWidget).toList(),
-        ),
+        link: popupData.buttonLink,
+        targetAnchor: popupData.buttonAnchor,
+        followerAnchor: popupData.popupAnchor,
+        offset: popupData.popupOffset,
+        child: ValueListenableBuilder<int?>(
+            valueListenable: selectionListenable,
+            builder: (context, value, _) {
+              return _PopupFlex(
+                popupData: popupData,
+                itemBuilderList: itemBuilderList,
+                spacing: spacing,
+                targetScale: value == index ? 1.0 : 0.0,
+                duration: duration,
+              );
+            }),
       ),
     );
   }
+}
+
+class _PopupFlex extends StatelessWidget {
+  const _PopupFlex({
+    required this.popupData,
+    required this.itemBuilderList,
+    required this.spacing,
+    required this.targetScale,
+    required this.duration,
+  });
+
+  final FollowerPopupData popupData;
+  final List<PopupItemBuilder> itemBuilderList;
+  final EdgeInsets spacing;
+  final double targetScale;
+  final Duration duration;
+
+  List<Widget> get _children => itemBuilderList
+      .map((item) => _Popup(
+            item: item,
+            spacing: spacing,
+            targetScale: targetScale,
+            duration: duration,
+          ))
+      .toList();
 
   @override
-  void dispose() {
-    widget.selectionListenable.removeListener(_onSelectListener);
-    _scaleController.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Flex(
+      direction: popupData.direction,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: _children,
+    );
+  }
+}
+
+class _Popup extends StatelessWidget {
+  const _Popup({
+    required this.item,
+    required this.spacing,
+    required this.targetScale,
+    required this.duration,
+  });
+
+  final PopupItemBuilder item;
+  final EdgeInsets spacing;
+  final double targetScale;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: spacing,
+      child: SetListenableBuilder<ButtonState>(
+        valueListenable: item.controller,
+        builder: item.builder,
+      ).animate(target: targetScale).scale(duration: duration),
+    );
   }
 }
 
