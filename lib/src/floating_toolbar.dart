@@ -77,14 +77,14 @@ double _maxTextWidth(
   return max.width;
 }
 
-bool _isNotCustom(item) => item.type != FloatingToolbarItemType.custom;
+bool _isNotCustom(item) => item.type != FloatingToolbarItemType.customButton;
 
 String _itemText(FloatingToolbarItem item) {
   if (item.type == FloatingToolbarItemType.buttonOnly) {
-    return item.basicButton.label ?? '';
+    return item.buttonOnlyItem.label ?? '';
   }
-  if (item.type == FloatingToolbarItemType.popup) {
-    return item.popupItem.label ?? '';
+  if (item.type == FloatingToolbarItemType.buttonWithPopups) {
+    return item.buttonWithPopupsItem.label ?? '';
   }
   return '';
 }
@@ -101,7 +101,7 @@ double _textPadding(
         : Theme.of(context).buttonTheme.padding.horizontal;
 
 /// Finds the max width of [items]. This can then be used to size
-/// all buttons. Excludes [FloatingToolbarItemType.custom].
+/// all buttons. Excludes [FloatingToolbarItemType.customButton].
 double findEqualizedSize({
   required BuildContext context,
   required List<FloatingToolbarItem> items,
@@ -168,10 +168,10 @@ class FloatingToolbar extends StatefulWidget {
 }
 
 class FloatingToolbarState extends State<FloatingToolbar> {
-  /// Used by [FloatingToolbarItem.popup] to assign index if current value is
+  /// Used by [FloatingToolbarItem.buttonWithPopups] to assign index if current value is
   /// null or set value to null if already selected. This ValueNotifier can be
   /// used to remotely trigger popups or to incorporate
-  /// [FloatingToolbarItem.basic] into the standard behavior of FloatingToolbar.
+  /// [FloatingToolbarItem.buttonOnly] into the standard behavior of FloatingToolbar.
   final ValueNotifier<int?> _selectNotifier = ValueNotifier(null);
 
   /// The set of all button indices whose selection is managed by this widget.
@@ -220,6 +220,17 @@ class FloatingToolbarState extends State<FloatingToolbar> {
   /// Callback for modal barrier dismissing. Used by [FloatingToolbarBarrier]
   void _barrierDismiss() => _selectNotifier.value = null;
 
+  Set<int> get _selecteableIndices {
+    final Set<int> selecteableIndices = {};
+    for (int i = 0; i < widget.items.length; i++) {
+      final item = widget.items[i];
+      if (item.type == FloatingToolbarItemType.buttonWithPopups) {
+        selecteableIndices.add(i);
+      }
+    }
+    return selecteableIndices;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -264,6 +275,7 @@ class FloatingToolbarState extends State<FloatingToolbar> {
       onBarrierDismiss: _barrierDismiss,
       barrier: widget.barrier,
       selectionListenable: _selectNotifier,
+      selectableIndices: _selecteableIndices,
     );
   }
 
@@ -276,48 +288,118 @@ class FloatingToolbarState extends State<FloatingToolbar> {
 }
 
 class _ToolbarButtonBase extends StatelessWidget {
-  final bool isSelected;
   final FloatingToolbarItem item;
-  final VoidCallback onTap;
-  final ToolbarButtonStyle style;
+  final bool? isSelected;
+  final VoidCallback? onTap;
+  final ToolbarButtonStyle? style;
 
-  const _ToolbarButtonBase({
-    required this.isSelected,
+  _ToolbarButtonBase.buttonWithPopups({
     required this.item,
-    required this.onTap,
-    required this.style,
-  });
+    required bool isSelected,
+    required VoidCallback onTap,
+    required ToolbarButtonStyle style,
+  })  : assert(
+          item.type == FloatingToolbarItemType.buttonWithPopups,
+          'Item type must be ${FloatingToolbarItemType.buttonWithPopups} to use the buttonWithPopups constructor.',
+        ),
+        this.isSelected = isSelected,
+        this.onTap = onTap,
+        this.style = style;
+
+  _ToolbarButtonBase.buttonOnly({
+    required this.item,
+    required VoidCallback onTap,
+    required ToolbarButtonStyle style,
+  })  : assert(
+          item.type == FloatingToolbarItemType.buttonOnly,
+          'Item type must be ${FloatingToolbarItemType.buttonOnly} to use the buttonOnly constructor.',
+        ),
+        this.isSelected = null,
+        this.onTap = onTap,
+        this.style = style;
+
+  _ToolbarButtonBase.custom({
+    required this.item,
+  })  : assert(
+          item.type == FloatingToolbarItemType.customButton,
+          'Item type must be ${FloatingToolbarItemType.customButton} to use the custom constructor.',
+        ),
+        this.isSelected = null,
+        this.onTap = null,
+        this.style = null;
 
   @override
   Widget build(BuildContext context) {
-    Widget button = BaseIconicButton(
-      isSelected: isSelected,
-      isEnabled: true,
-      iconData: item.popupItem.iconData,
-      onPressed: onTap,
-      label: item.popupItem.label,
-      tooltip: item.popupItem.tooltip,
-      showAlertDot: style.showAlertDot,
-      alertDotColor: style.alertDotColor,
-      style: style.buttonStyle,
-      primary: style.primary,
-      onPrimary: style.onPrimary,
-      onSurface: style.onSurface,
-      shadowColor: style.shadowColor,
-      elevation: style.elevation,
-      textStyle: style.textStyle,
-      padding: style.padding,
-      shape: style.shape,
-      splashFactory: style.splashFactory,
-      tooltipOffset: style.tooltipOffset,
-      preferTooltipBelow: style.preferTooltipBelow,
-      animationDuration: style.changeDuration,
-      waitDuration: style.waitDuration,
-      curve: style.curve,
-    );
-    if (style.equalizedSize != null) {
+    Widget button;
+    switch (item.type) {
+      case FloatingToolbarItemType.buttonOnly:
+        button = SetListenableBuilder<ButtonState>(
+          valueListenable: item.buttonOnlyController,
+          builder: (context, state, _) {
+            return BaseIconicButton(
+              isSelected: state.contains(ButtonState.selected),
+              isEnabled: state.contains(ButtonState.enabled),
+              isSelectable: item.buttonOnlyItem.isSelectable,
+              iconData: item.buttonOnlyItem.iconData,
+              onPressed: onTap!,
+              label: item.buttonOnlyItem.label,
+              tooltip: item.buttonOnlyItem.tooltip,
+              showAlertDot: style!.showAlertDot,
+              alertDotColor: style!.alertDotColor,
+              style: style!.buttonStyle,
+              primary: style!.primary,
+              onPrimary: style!.onPrimary,
+              onSurface: style!.onSurface,
+              shadowColor: style!.shadowColor,
+              elevation: style!.elevation,
+              textStyle: style!.textStyle,
+              padding: style!.padding,
+              shape: style!.shape,
+              splashFactory: style!.splashFactory,
+              tooltipOffset: style!.tooltipOffset,
+              preferTooltipBelow: style!.preferTooltipBelow,
+              animationDuration: style!.changeDuration,
+              waitDuration: style!.waitDuration,
+              curve: style!.curve,
+            );
+          },
+        );
+        break;
+      case FloatingToolbarItemType.buttonWithPopups:
+        button = BaseIconicButton(
+          isSelected: isSelected!,
+          isEnabled: true,
+          isSelectable: true,
+          iconData: item.buttonWithPopupsItem.iconData,
+          onPressed: onTap!,
+          label: item.buttonWithPopupsItem.label,
+          tooltip: item.buttonWithPopupsItem.tooltip,
+          showAlertDot: style!.showAlertDot,
+          alertDotColor: style!.alertDotColor,
+          style: style!.buttonStyle,
+          primary: style!.primary,
+          onPrimary: style!.onPrimary,
+          onSurface: style!.onSurface,
+          shadowColor: style!.shadowColor,
+          elevation: style!.elevation,
+          textStyle: style!.textStyle,
+          padding: style!.padding,
+          shape: style!.shape,
+          splashFactory: style!.splashFactory,
+          tooltipOffset: style!.tooltipOffset,
+          preferTooltipBelow: style!.preferTooltipBelow,
+          animationDuration: style!.changeDuration,
+          waitDuration: style!.waitDuration,
+          curve: style!.curve,
+        );
+        break;
+      case FloatingToolbarItemType.customButton:
+        button = item.customButton;
+        break;
+    }
+    if (style?.equalizedSize != null) {
       button = SizedBox(
-        width: style.equalizedSize,
+        width: style!.equalizedSize,
         child: button,
       );
     }
@@ -329,7 +411,7 @@ class _ToolbarButtonBase extends StatelessWidget {
 /// through a double parameter [factor] rather than an ValueListenable.
 /// Which enabled the use of one [AnimationController] for all buttons
 /// even though they animate indipendidently.
-/// Added [Opacity] for a better look during transitions. 
+/// Added [Opacity] for a better look during transitions.
 class _FractionallyHide extends StatelessWidget {
   const _FractionallyHide({
     required this.axis,
@@ -369,37 +451,82 @@ typedef EvaluateFactor = double Function(double factor);
 typedef EvaluateSelection = bool Function(int? selection);
 
 class _ToolbarButton extends StatelessWidget {
-  const _ToolbarButton({
-    required this.evaluateSelection,
-    required this.selectionListenable,
+  _ToolbarButton.buttonWithPopups({
+    required EvaluateSelection evaluateSelection,
+    required ValueListenable<int?> selectionListenable,
+    required LayerLink link,
+    required VoidCallback onTap,
+    required ToolbarButtonStyle style,
     required this.animation,
     required this.evaluateFactor,
     required this.axis,
     required this.axisAlignment,
     required this.padding,
-    required this.link,
     required this.item,
-    required this.onTap,
-    required this.style,
-  });
+  })  : assert(
+          item.type == FloatingToolbarItemType.buttonWithPopups,
+          'Item must be popup to use buttonWithPopups constructor',
+        ),
+        this.evaluateSelection = evaluateSelection,
+        this.selectionListenable = selectionListenable,
+        this.link = link,
+        this.onTap = onTap,
+        this.style = style;
 
-  final EvaluateSelection evaluateSelection;
-  final ValueListenable<int?> selectionListenable;
+  _ToolbarButton.buttonOnly({
+    required VoidCallback onTap,
+    required ToolbarButtonStyle style,
+    required this.animation,
+    required this.evaluateFactor,
+    required this.axis,
+    required this.axisAlignment,
+    required this.padding,
+    required this.item,
+  })  : assert(
+          item.type == FloatingToolbarItemType.buttonOnly,
+          'Item must be buttonOnly to use buttonOnly constructor',
+        ),
+        this.evaluateSelection = null,
+        this.selectionListenable = null,
+        this.link = null,
+        this.onTap = onTap,
+        this.style = style;
+
+  _ToolbarButton.custom({
+    required this.animation,
+    required this.evaluateFactor,
+    required this.axis,
+    required this.axisAlignment,
+    required this.padding,
+    required this.item,
+  })  : assert(
+          item.type == FloatingToolbarItemType.customButton,
+          'Item must be custom to use custom constructor',
+        ),
+        this.evaluateSelection = null,
+        this.selectionListenable = null,
+        this.link = null,
+        this.onTap = null,
+        this.style = null;
+
+  final EvaluateSelection? evaluateSelection;
+  final ValueListenable<int?>? selectionListenable;
+  final LayerLink? link;
+
+  final VoidCallback? onTap;
+  final ToolbarButtonStyle? style;
+
   final ValueListenable<double> animation;
   final EvaluateFactor evaluateFactor;
   final Axis axis;
   final double axisAlignment;
   final EdgeInsets padding;
-  final LayerLink link;
   final FloatingToolbarItem item;
-  final VoidCallback onTap;
-  final ToolbarButtonStyle style;
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<int?>(
-      valueListenable: selectionListenable,
-      builder: (context, selected, _) {
+    switch (item.type) {
+      case FloatingToolbarItemType.buttonOnly:
         return AnimatedBuilder(
           animation: animation,
           builder: (context, _) {
@@ -409,21 +536,59 @@ class _ToolbarButton extends StatelessWidget {
               factor: evaluateFactor(animation.value),
               child: Padding(
                 padding: padding,
-                child: CompositedTransformTarget(
-                  link: link,
-                  child: _ToolbarButtonBase(
-                    isSelected: evaluateSelection(selected),
-                    item: item,
-                    onTap: onTap,
-                    style: style,
-                  ),
+                child: _ToolbarButtonBase.buttonOnly(
+                  item: item,
+                  onTap: onTap!,
+                  style: style!,
                 ),
               ),
             );
           },
         );
-      },
-    );
+      case FloatingToolbarItemType.buttonWithPopups:
+        return ValueListenableBuilder<int?>(
+          valueListenable: selectionListenable!,
+          builder: (context, selected, _) {
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (context, _) {
+                return _FractionallyHide(
+                  axis: axis,
+                  axisAlignment: axisAlignment,
+                  factor: evaluateFactor(animation.value),
+                  child: Padding(
+                    padding: padding,
+                    child: CompositedTransformTarget(
+                      link: link!,
+                      child: _ToolbarButtonBase.buttonWithPopups(
+                        isSelected: evaluateSelection!(selected),
+                        item: item,
+                        onTap: onTap!,
+                        style: style!,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      case FloatingToolbarItemType.customButton:
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (context, _) {
+            return _FractionallyHide(
+              axis: axis,
+              axisAlignment: axisAlignment,
+              factor: evaluateFactor(animation.value),
+              child: Padding(
+                padding: padding,
+                child: _ToolbarButtonBase.custom(item: item),
+              ),
+            );
+          },
+        );
+    }
   }
 }
 
@@ -497,7 +662,7 @@ class _ToolbarFlexState extends State<_ToolbarFlex>
   }
 
   /// Indirectly calls [_animate] if not currently animating.
-  /// Passes _animate call to [widget.onDeselect] so that 
+  /// Passes _animate call to [widget.onDeselect] so that
   /// any popups can be hidden and these animations will start
   /// in the next scheduled frame.
   void _startAnimation() {
@@ -508,7 +673,7 @@ class _ToolbarFlexState extends State<_ToolbarFlex>
   }
 
   /// Returns either the animation value or its inverse depending on
-  /// whether hiding or showing, and, whether the animation is 
+  /// whether hiding or showing, and, whether the animation is
   /// shrinking or growing. Defaults to 1.0.
   double _evaluateFactor(double animation, int index) {
     if (_hidingIndices.contains(index)) {
@@ -544,16 +709,22 @@ class _ToolbarFlexState extends State<_ToolbarFlex>
       switch (item.type) {
         case FloatingToolbarItemType.buttonOnly:
           toolbarButtons.add(
-            Padding(
+            _ToolbarButton.buttonOnly(
+              item: item,
+              onTap: () => widget.onTap(index),
+              evaluateFactor: (factor) => _evaluateFactor(factor, index),
+              animation: _controller.view,
+              axis: widget.toolbarStyle.toolbarDirection,
+              axisAlignment: axisAlignment,
               padding: padding,
-              child: item.basicButton,
+              style: widget.buttonStyle,
             ),
           );
           break;
-        case FloatingToolbarItemType.popup:
+        case FloatingToolbarItemType.buttonWithPopups:
           final LayerLink targetButtonLink = LayerLink();
           toolbarButtons.add(
-            _ToolbarButton(
+            _ToolbarButton.buttonWithPopups(
               link: targetButtonLink,
               item: item,
               onTap: () => widget.onTap(index),
@@ -584,11 +755,15 @@ class _ToolbarFlexState extends State<_ToolbarFlex>
             ),
           );
           break;
-        case FloatingToolbarItemType.custom:
+        case FloatingToolbarItemType.customButton:
           toolbarButtons.add(
-            Padding(
+            _ToolbarButton.custom(
+              animation: _controller.view,
+              evaluateFactor: (factor) => _evaluateFactor(factor, index),
+              axis: widget.toolbarStyle.toolbarDirection,
+              axisAlignment: axisAlignment,
               padding: padding,
-              child: item.custom,
+              item: item,
             ),
           );
           break;
@@ -631,6 +806,7 @@ class _ToolbarFlexState extends State<_ToolbarFlex>
     }
     bool isChanged = widget.hidden.length != oldWidget.hidden.length ||
         widget.hidden.difference(oldWidget.hidden).isNotEmpty;
+
     /// Increment previous and next hidden indices
     if (isChanged) {
       _prevHiddenIndices = _nextHiddenIndices;
@@ -738,6 +914,7 @@ class _ToolbarStack extends StatelessWidget {
     required this.animationDuration,
     required this.onBarrierDismiss,
     required this.selectionListenable,
+    required this.selectableIndices,
     this.barrier,
   });
 
@@ -758,8 +935,10 @@ class _ToolbarStack extends StatelessWidget {
   /// desired during popup display.
   final VoidCallback onBarrierDismiss;
 
-  /// Duration for barrier 
+  /// Duration for barrier
   final Duration animationDuration;
+
+  final Set<int> selectableIndices;
 
   @override
   Widget build(BuildContext context) {
@@ -773,7 +952,7 @@ class _ToolbarStack extends StatelessWidget {
                   valueListenable: selectionListenable,
                   builder: (context, selection, _) {
                     return FloatingToolbarBarrier(
-                      isActive: selection != null,
+                      isActive: selectableIndices.contains(selection),
                       duration: animationDuration,
                       onDismiss: onBarrierDismiss,
                       barrier: barrier!,
@@ -815,104 +994,33 @@ class FloatingToolbarBarrier extends StatelessWidget {
   /// Whether to enable tap and pan detectors and whether to
   /// show barrier.
   final bool isActive;
-  
+
   /// The duration for animated changes in barrier.
   final Duration duration;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTapDown: isActive ? (details) => onDismiss() : null,
-      onPanStart: isActive ? (details) => onDismiss() : null,
-      child: _AnimatedBarrier(
-        duration: duration,
-        isActive: isActive,
-        sigmaX: barrier.sigmaX,
-        sigmaY: barrier.sigmaY,
-        color: barrier.color,
-      ),
+    return AnimatedSwitcher(
+      duration: duration,
+      child: isActive
+          ? GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTapDown: (details) => onDismiss(),
+              onPanStart: (details) => onDismiss(),
+              child: SizedBox.expand(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: barrier.sigmaX,
+                    sigmaY: barrier.sigmaY,
+                  ),
+                  child: Container(
+                    color: barrier.color,
+                  ),
+                ),
+              ),
+            )
+          : SizedBox.shrink(),
     );
-  }
-}
-
-/// Animates barrier effect between active and inactive.
-class _AnimatedBarrier extends StatefulWidget {
-  const _AnimatedBarrier({
-    required this.isActive,
-    required this.duration,
-    required this.color,
-    required this.sigmaX,
-    required this.sigmaY,
-  });
-
-  final bool isActive;
-  final Duration duration;
-
-  /// Optional color for this barrier
-  final Color color;
-
-  /// sigmaX for blur effect
-  final double sigmaX;
-
-  /// sigmaY for blur effect
-  final double sigmaY;
-
-  @override
-  State<_AnimatedBarrier> createState() => _AnimatedBarrierState();
-}
-
-class _AnimatedBarrierState extends State<_AnimatedBarrier>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    _controller = AnimationController(
-      vsync: this,
-      value: widget.isActive ? 1.0 : 0.0,
-      duration: widget.duration,
-    );
-    super.initState();
-  }
-
-  @override
-  void didUpdateWidget(covariant _AnimatedBarrier oldWidget) {
-    if (oldWidget.isActive != widget.isActive) {
-      if (widget.isActive) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    }
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller.view,
-      builder: (context, _) {
-        return SizedBox.expand(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: widget.sigmaX * _controller.value,
-              sigmaY: widget.sigmaY * _controller.value,
-            ),
-            child: Container(
-              color: widget.color
-                  .withOpacity(widget.color.opacity * _controller.value),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }
 
@@ -1549,7 +1657,7 @@ class ToolbarButtonStyle {
   final Duration popupDuration;
 
   /// Curve applied button state change animations. Applied to
-  /// [FloatingToolbarItem.popup]. Default is [Curves.linear]
+  /// [FloatingToolbarItem.buttonWithPopups]. Default is [Curves.linear]
   final Curve curve;
 
   /// Offset of tooltips
@@ -1558,7 +1666,7 @@ class ToolbarButtonStyle {
   /// Whether to place tooltips below their button by default
   final bool? preferTooltipBelow;
 
-  /// Optional uniform size for all [FloatingToolbarItemType.popup] and
+  /// Optional uniform size for all [FloatingToolbarItemType.buttonWithPopups] and
   /// [FloatingToolbarItemType.buttonOnly] items. Either set a size
   /// directly (for example [kMinInteractiveDimension]) or use the
   /// [findEqualizedSize] function provided in this file.
