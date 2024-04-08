@@ -1,3 +1,4 @@
+import 'package:collection_value_notifier/collection_value_notifier.dart';
 import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
 import 'package:iconic_button/iconic_button.dart';
@@ -55,7 +56,6 @@ class _MyHomePageState extends State<MyHomePage> {
   };
 
   int _reactiveIndex = 6;
-  bool _reactiveButtonEnabled = true;
   bool _reactiveButtonSelected = false;
   ButtonController _reactiveController = ButtonController();
   List<ButtonController> _popupControllers = [];
@@ -67,7 +67,6 @@ class _MyHomePageState extends State<MyHomePage> {
   ValueNotifier<String?> _displayTextNotifier = ValueNotifier(null);
 
   void _snack() {
-    // _hideIndices.value = {2};
     String text = lorem[_loremIndex % lorem.length];
     ScaffoldMessenger.of(context)
         .showSnackBar(
@@ -140,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
       String label = _numberNames[index]!;
       if (index == 0) {
         _primaryItems.add(
-          FloatingToolbarItem.custom(
+          FloatingToolbarItem.customButton(
             ValueListenableBuilder<bool>(
                 valueListenable: _hasFocus,
                 builder: (context, value, _) {
@@ -173,26 +172,24 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       } else if (index == _reactiveIndex) {
         _primaryItems.add(
-          FloatingToolbarItem.basic(
-            IconicButton(
-              controller: _reactiveController,
+          FloatingToolbarItem.buttonOnly(
+            item: IconicItem(
               iconData: _iconList[index],
-              onPressed: _enabledButtonOnPressed,
-              elevation: 0.0,
               label: 'Diff',
               tooltip: 'This is the enabled/disabled button',
             ),
+            controller: _reactiveController,
           ),
         );
       } else {
         int num = 2 + (index % (3));
-        List<PopupItemBuilder> buttons = [];
+        List<PopupItemBuilder> popups = [];
         for (int i = 0; i < num; i++) {
-          ButtonController buttonController = ButtonController();
-          _popupControllers.add(buttonController);
-          buttons.add(
+          ButtonController ctl = ButtonController();
+          _popupControllers.add(ctl);
+          popups.add(
             PopupItemBuilder(
-              controller: buttonController,
+              controller: ctl,
               builder: (context, state, child) {
                 ThemeData theme = Theme.of(context);
                 return BaseIconicButton(
@@ -214,13 +211,13 @@ class _MyHomePageState extends State<MyHomePage> {
           );
         }
         _primaryItems.add(
-          FloatingToolbarItem.popup(
-            IconicItem(
+          FloatingToolbarItem.buttonWithPopups(
+            item: IconicItem(
               iconData: _iconList[index],
               label: label,
               tooltip: 'This is $label',
             ),
-            buttons,
+            popups: popups,
           ),
         );
       }
@@ -256,20 +253,23 @@ class _MyHomePageState extends State<MyHomePage> {
                         }),
                   ),
                   Padding(padding: EdgeInsets.only(bottom: 16.0)),
-                  SwitchListTile.adaptive(
-                    title: Text('Enable/Disable Button'),
-                    subtitle:
-                        Text('Scroll to find the button that says Enable'),
-                    value: _reactiveButtonEnabled,
-                    onChanged: (value) => setState(() {
-                      _reactiveButtonEnabled = value;
-                      if (_reactiveButtonEnabled) {
-                        _reactiveController.enable();
-                      } else {
-                        _reactiveController.disable();
-                      }
-                    }),
-                  ),
+                  SetListenableBuilder<ButtonState>(
+                      valueListenable: _reactiveController,
+                      builder: (context, state, _) {
+                        return SwitchListTile.adaptive(
+                          title: Text('Enable/Disable Button'),
+                          subtitle: Text(
+                              'Scroll to find the button that says Enable'),
+                          value: state.contains(ButtonState.enabled),
+                          onChanged: (value) {
+                            if (_reactiveController.isEnabled) {
+                              _reactiveController.disable();
+                            } else {
+                              _reactiveController.enable();
+                            }
+                          },
+                        );
+                      }),
                 ],
               ),
             ),
@@ -289,7 +289,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: _buttonContentPadding,
                 ),
               ),
-              onValueChanged: (index) => print(index),
+              onValueChanged: (index) {
+                if (index == 6) {
+                  _enabledButtonOnPressed();
+                }
+              },
               itemSelector: _itemSelector,
               barrier: ToolbarBarrier(),
               hide: _hideIndices,
