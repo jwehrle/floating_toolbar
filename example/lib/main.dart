@@ -125,6 +125,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 }),
           ),
         );
+      } else if (index == 1) {
+        _primaryItems.add(
+          FloatingToolbarItem.modalBuilder(
+            IconicItem(
+              iconData: _iconList[index],
+              label: label,
+              tooltip: 'This is $label',
+            ),
+            Builder(
+              builder: (context) => Container(
+                height: 60.0,
+                width: 120.0,
+                color: Colors.deepOrangeAccent,
+              ),
+            ),
+          ),
+        );
       } else if (index == _reactiveIndex) {
         _primaryItems.add(
           FloatingToolbarItem.basic(

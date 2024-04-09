@@ -1,24 +1,23 @@
-import 'package:collection_value_notifier/collection_value_notifier.dart';
+import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:iconic_button/iconic_button.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:iconic_button/button.dart';
 
 /// Encapsulates parameters needed for CompositedTransformFollower on which
-/// [PopupCollection] is based.
+/// [Popup] is based.
 class FollowerPopupData {
-  final LayerLink buttonLink;
+  final LayerLink link;
   final Axis direction;
-  final Alignment buttonAnchor;
-  final Alignment popupAnchor;
-  final Offset popupOffset;
+  final Alignment targetAnchor;
+  final Alignment followerAnchor;
+  final Offset offset;
 
   FollowerPopupData({
-    required this.buttonLink,
+    required this.link,
     required this.direction,
-    required this.buttonAnchor,
-    required this.popupAnchor,
-    required this.popupOffset,
+    required this.targetAnchor,
+    required this.followerAnchor,
+    required this.offset,
   });
 }
 
@@ -29,7 +28,7 @@ class PopupItemBuilder {
   final ButtonController controller;
   final BaseIconicButton Function(
     BuildContext context,
-    Set<ButtonState> state,
+    ButtonState state,
     Widget? child,
   ) builder;
 
@@ -37,16 +36,15 @@ class PopupItemBuilder {
 }
 
 /// Shows or hides popup items which are built from a list of [itemBuilderList]
-/// based on [selectionListenable] value comparison to [index].
-class PopupCollection extends StatelessWidget {
-  const PopupCollection({
+/// based on [listenable] value comparison to [index].
+class Popup extends StatefulWidget {
+  const Popup({
     Key? key,
     required this.index,
-    required this.selectionListenable,
+    required this.listenable,
     required this.itemBuilderList,
     required this.spacing,
-    required this.popupData,
-    required this.duration,
+    required this.followerPopupData,
   }) : super(key: key);
 
   /// Which toolbar button this popup is associated with
@@ -54,7 +52,7 @@ class PopupCollection extends StatelessWidget {
 
   /// Event changes in the toolbar button selected determine whether these
   /// popup elements are shown or hidden
-  final ValueListenable<int?> selectionListenable;
+  final ValueListenable<int?> listenable;
 
   /// Builder for each popup element
   final List<PopupItemBuilder> itemBuilderList;
@@ -64,9 +62,50 @@ class PopupCollection extends StatelessWidget {
 
   /// Parameters used for the CompositedTransformFollower on which this calls is
   /// based.
-  final FollowerPopupData popupData;
+  final FollowerPopupData followerPopupData;
 
-  final Duration duration;
+  @override
+  State<StatefulWidget> createState() => PopupState();
+}
+
+class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
+  late final AnimationController _scaleController;
+
+  void _onSelectListener() {
+    if (widget.listenable.value == widget.index) {
+      if (_scaleController.status == AnimationStatus.dismissed) {
+        _scaleController.forward();
+      }
+    } else {
+      if (_scaleController.status == AnimationStatus.completed) {
+        _scaleController.reverse();
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      vsync: this,
+      lowerBound: 0.0,
+      upperBound: 1.0,
+      value: widget.listenable.value == widget.index ? 1.0 : 0.0,
+      duration: kThemeAnimationDuration,
+    );
+    widget.listenable.addListener(_onSelectListener);
+  }
+
+  Widget _itemToWidget(PopupItemBuilder item) => Padding(
+        padding: widget.spacing,
+        child: ScaleTransition(
+          scale: _scaleController.view,
+          child: ValueListenableBuilder<ButtonState>(
+            valueListenable: item.controller,
+            builder: item.builder,
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -74,101 +113,55 @@ class PopupCollection extends StatelessWidget {
       left: 0.0,
       top: 0.0,
       child: CompositedTransformFollower(
-        link: popupData.buttonLink,
-        targetAnchor: popupData.buttonAnchor,
-        followerAnchor: popupData.popupAnchor,
-        offset: popupData.popupOffset,
-        child: ValueListenableBuilder<int?>(
-            valueListenable: selectionListenable,
-            builder: (context, value, _) {
-              return _PopupFlex(
-                popupData: popupData,
-                itemBuilderList: itemBuilderList,
-                spacing: spacing,
-                targetScale: value == index ? 1.0 : 0.0,
-                duration: duration,
-              );
-            }),
+        link: widget.followerPopupData.link,
+        targetAnchor: widget.followerPopupData.targetAnchor,
+        followerAnchor: widget.followerPopupData.followerAnchor,
+        offset: widget.followerPopupData.offset,
+        child: Flex(
+          direction: widget.followerPopupData.direction,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: widget.itemBuilderList.map(_itemToWidget).toList(),
+        ),
       ),
     );
   }
-}
-
-class _PopupFlex extends StatelessWidget {
-  const _PopupFlex({
-    required this.popupData,
-    required this.itemBuilderList,
-    required this.spacing,
-    required this.targetScale,
-    required this.duration,
-  });
-
-  final FollowerPopupData popupData;
-  final List<PopupItemBuilder> itemBuilderList;
-  final EdgeInsets spacing;
-  final double targetScale;
-  final Duration duration;
-
-  List<Widget> get _children => itemBuilderList
-      .map((item) => _Popup(
-            item: item,
-            spacing: spacing,
-            targetScale: targetScale,
-            duration: duration,
-          ))
-      .toList();
 
   @override
-  Widget build(BuildContext context) {
-    return Flex(
-      direction: popupData.direction,
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: _children,
-    );
+  void dispose() {
+    widget.listenable.removeListener(_onSelectListener);
+    _scaleController.dispose();
+    super.dispose();
   }
 }
 
-class _Popup extends StatelessWidget {
-  const _Popup({
-    required this.item,
-    required this.spacing,
-    required this.targetScale,
-    required this.duration,
+class FollowerModalData {
+  final LayerLink link;
+  final Alignment targetAnchor;
+  final Alignment followerAnchor;
+  final Offset offset;
+
+  FollowerModalData({
+    required this.link,
+    required this.targetAnchor,
+    required this.followerAnchor,
+    required this.offset,
   });
-
-  final PopupItemBuilder item;
-  final EdgeInsets spacing;
-  final double targetScale;
-  final Duration duration;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: spacing,
-      child: SetListenableBuilder<ButtonState>(
-        valueListenable: item.controller,
-        builder: item.builder,
-      ).animate(target: targetScale).scale(duration: duration),
-    );
-  }
 }
 
 class ToolbarModal extends StatefulWidget {
   final ValueListenable<int?> listenable;
-  final Alignment alignment;
   final int index;
-  final double margin;
-  final LayerLink link;
+  final FollowerModalData followerModalData;
+  final EdgeInsets spacing;
   final Builder builder;
 
   const ToolbarModal({
     Key? key,
     required this.listenable,
-    required this.alignment,
     required this.index,
-    required this.link,
-    required this.margin,
+    required this.followerModalData,
+    required this.spacing,
     required this.builder,
   }) : super(key: key);
 
@@ -207,15 +200,20 @@ class ToolbarModalState extends State<ToolbarModal>
 
   @override
   Widget build(BuildContext context) {
-    double toolbarHeight = widget.link.leaderSize?.height ?? 0.0;
-    double bottomPadding = widget.margin + toolbarHeight;
-    return Align(
-      alignment: widget.alignment,
-      child: Padding(
-        padding: EdgeInsets.only(bottom: bottomPadding),
-        child: ScaleTransition(
-          scale: _scaleController.view,
-          child: widget.builder.build(context),
+    return Positioned(
+      left: 0.0,
+      top: 0.0,
+      child: CompositedTransformFollower(
+        link: widget.followerModalData.link,
+        targetAnchor: widget.followerModalData.targetAnchor,
+        followerAnchor: widget.followerModalData.followerAnchor,
+        offset: widget.followerModalData.offset,
+        child: Padding(
+          padding: widget.spacing,
+          child: ScaleTransition(
+            scale: _scaleController.view,
+            child: widget.builder.build(context),
+          ),
         ),
       ),
     );

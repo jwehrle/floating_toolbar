@@ -1,6 +1,6 @@
 import 'package:floating_toolbar/src/popup.dart';
 import 'package:flutter/material.dart';
-import 'package:iconic_button/iconic_button.dart';
+import 'package:iconic_button/button.dart';
 
 /// Used in conjunction with [FloatingToolbar.toolbarStyle] to build
 /// [IconicButton] for toolbar that is selected or unSelected based on toolbar
@@ -8,109 +8,109 @@ import 'package:iconic_button/iconic_button.dart';
 class IconicItem {
   IconicItem({
     required this.iconData,
+    this.onPressed,
     this.label,
-    this.isSelectable = true,
     this.tooltip,
   });
 
   /// IconData must be supplied as IconicButton always shows an icon.
   final IconData iconData;
 
+  /// Optional onPressed callback is not used in standard [FloatingToolbarItem]
+  final VoidCallback? onPressed;
+
   /// Optional button label displayed below icon
   final String? label;
-
-  /// Whether this button has a distinct state when selected. Used for
-  /// [FloatingToolbarItemType.buttonOnly], defaults to true.
-  final bool isSelectable;
 
   /// Optional tooltip displayed on long press of hover
   final String? tooltip;
 }
 
 /// The types of toolbar items [FloatingToolbar] accepts.
-///
-/// buttonOnly: Places an unmanaged [IconicButton] in a [FloatingToolbar]
-/// popup: Places an [IconicItem] with an associated list of [PopupItemBuilder]
-/// in a [FloatingToolbar] which manages item selection.
-/// custom: Places an unmanaged [Widget] in a [FloatingToolbar]
-enum FloatingToolbarItemType { buttonOnly, buttonWithPopups, customButton }
+enum FloatingToolbarItemType { basic, popup, custom, modal }
 
 class FloatingToolbarItem {
-  /// Used to make a FloatingToolbarItem of type [FloatingToolbarItemType.buttonWithPopups].
-  ///
-  /// [item] : [IconicItem] from which [FloatingToolbar] will build a button.
-  /// [popups] : List of [PopupItemBuilder] assoticated with [item].
-  ///
-  /// Selection of this button is handled by [FloatingToolbar].
-  /// Do not use this constructor if you want to control the appearance changes of this button.
-  FloatingToolbarItem.buttonWithPopups({
-    required IconicItem item,
-    required List<PopupItemBuilder> popups,
-  })  : this.type = FloatingToolbarItemType.buttonWithPopups,
-        this._buttonWithPopupsItem = item,
-        this._popups = popups,
-        this._buttonOnlyItem = null,
-        this._buttonOnlyController = null,
-        this._customButton = null;
-
-  /// Used to insert an unmanaged [IconicButton], [item], into the [FloatingToolbar].
-  /// This button's selection is not controlled by [FloatingToolbar] and
-  /// has no associated popups.
-  FloatingToolbarItem.buttonOnly({
-    required IconicItem item,
-    required ButtonController controller,
-  })  : this.type = FloatingToolbarItemType.buttonOnly,
-        this._buttonOnlyItem = item,
-        this._buttonOnlyController = controller,
-        this._customButton = null,
-        this._buttonWithPopupsItem = null,
-        this._popups = null;
-
-  /// Used to insert an unmanaged Widget, [custom], into the [FloatingToolbar].
-  /// Do not use unbounded widgets.
-  FloatingToolbarItem.customButton(Widget custom)
-      : this._customButton = custom,
-        this.type = FloatingToolbarItemType.customButton,
-        this._buttonOnlyItem = null,
-        this._buttonOnlyController = null,
-        this._popups = null,
-        this._buttonWithPopupsItem = null;
-
-  /// The type of [FloatingToolbarItem]. Set through choice of constructor.
   final FloatingToolbarItemType type;
+
+  /// Used to make a toolbar button that controls associated popups. Selection
+  /// of this button is handled by [FloatingToolbar]. Do not use this
+  /// constructor if you want to control the appearance changes of this button.
+  FloatingToolbarItem.popup(
+    IconicItem popupButton,
+    List<PopupItemBuilder> popups,
+  )   : this.type = FloatingToolbarItemType.popup,
+        this._popupButton = popupButton,
+        this._popups = popups,
+        this._basicButton = null,
+        this._custom = null,
+        this._modalBuilder = null;
+
+  /// Used to insert a custom button into the [FloatingToolbar]. This button's
+  /// selection is not controlled by [FloatingToolbar] and has no associated
+  /// popups.
+  FloatingToolbarItem.basic(IconicButton basicButton)
+      : this.type = FloatingToolbarItemType.basic,
+        this._basicButton = basicButton,
+        this._custom = null,
+        this._popupButton = null,
+        this._popups = null,
+        this._modalBuilder = null;
+
+  /// Used to make a completely custom button with no popups. Do not use
+  /// unbounded widgets.
+  FloatingToolbarItem.custom(Widget custom)
+      : this._custom = custom,
+        this.type = FloatingToolbarItemType.custom,
+        this._basicButton = null,
+        this._popups = null,
+        this._popupButton = null,
+        this._modalBuilder = null;
+
+  FloatingToolbarItem.modalBuilder(IconicItem modalButton, Builder modalBuilder)
+      : this._modalBuilder = modalBuilder,
+        this.type = FloatingToolbarItemType.modal,
+        this._basicButton = null,
+        this._popups = null,
+        this._popupButton = modalButton,
+        this._custom = null;
 
   /// IconicItem used in standard mode to build radio button style toolbar
   /// button
-  final IconicItem? _buttonWithPopupsItem;
-  IconicItem get buttonWithPopupsItem {
-    assert(type == FloatingToolbarItemType.buttonWithPopups);
-    return _buttonWithPopupsItem!;
+  final IconicItem? _popupButton;
+  IconicItem get popupButton {
+    assert(type == FloatingToolbarItemType.popup ||
+        type == FloatingToolbarItemType.modal);
+    return _popupButton!;
   }
 
   /// List of PopupItemBuilders used to build a [Flex] of popup buttons
   /// associated with a radio button style toolbar button
   final List<PopupItemBuilder>? _popups;
   List<PopupItemBuilder> get popups {
-    assert(type == FloatingToolbarItemType.buttonWithPopups);
+    assert(type == FloatingToolbarItemType.popup);
     return _popups!;
   }
 
+  final Builder? _modalBuilder;
+  Builder get modalBuilder {
+    assert(type == FloatingToolbarItemType.modal);
+    return _modalBuilder!;
+  }
+
+  /// If true, [_basicButton] is not null but both [_popupButton] and [_popups]
+  /// are null. If false, both [_popupButton] and [_popups] are not null but
+  /// [_basicButton] is null.
+
   /// For use when no popups are to be associated with this toolbar button
-  final IconicItem? _buttonOnlyItem;
-  IconicItem get buttonOnlyItem {
-    assert(type == FloatingToolbarItemType.buttonOnly);
-    return _buttonOnlyItem!;
+  final IconicButton? _basicButton;
+  IconicButton get basicButton {
+    assert(type == FloatingToolbarItemType.basic);
+    return _basicButton!;
   }
 
-  final ButtonController? _buttonOnlyController;
-  ButtonController get buttonOnlyController {
-    assert(type == FloatingToolbarItemType.buttonOnly, '');
-    return _buttonOnlyController!;
-  }
-
-  final Widget? _customButton;
-  Widget get customButton {
-    assert(type == FloatingToolbarItemType.customButton);
-    return _customButton!;
+  final Widget? _custom;
+  Widget get custom {
+    assert(type == FloatingToolbarItemType.custom);
+    return _custom!;
   }
 }
