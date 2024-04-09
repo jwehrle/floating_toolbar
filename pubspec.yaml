@@ -13,10 +13,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  material_design_icons_flutter:
-  collection_value_notifier: ^1.0.0
-  iconic_button: ^1.3.0
-  flutter_animate: ^4.5.0
+  iconic_button:
+    git:
+      url: https://github.com/jwehrle/iconic_button.git
 
 dev_dependencies:
   flutter_test:
