@@ -1,3 +1,4 @@
+import 'package:collection_value_notifier/collection_value_notifier.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:iconic_button/iconic_button.dart';
@@ -27,7 +28,7 @@ class PopupItemBuilder {
   final ButtonController controller;
   final BaseIconicButton Function(
     BuildContext context,
-    ButtonState state,
+    Set<ButtonState> state,
     Widget? child,
   ) builder;
 
@@ -99,7 +100,7 @@ class PopupState extends State<Popup> with SingleTickerProviderStateMixin {
         padding: widget.spacing,
         child: ScaleTransition(
           scale: _scaleController.view,
-          child: ValueListenableBuilder<ButtonState>(
+          child: SetListenableBuilder<ButtonState>(
             valueListenable: item.controller,
             builder: item.builder,
           ),

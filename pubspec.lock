@@ -102,13 +102,13 @@ packages:
     source: hosted
     version: "1.17.1"
   collection_value_notifier:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: collection_value_notifier
-      sha256: "2aba1ec61ee1ab86945d44f9da20c14ac5bef4db40dee1e1263729ab6ed166b4"
+      sha256: "647fc439cc1ecf566d528389ac98485ed875bdd89d4b9069db7b248baa88d100"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "1.0.0"
   convert:
     dependency: transitive
     description:
@@ -181,10 +181,10 @@ packages:
     dependency: "direct main"
     description:
       name: iconic_button
-      sha256: "00d30cb9d3da7f6aee4dd8b975f74387683651eabd057f7c3b925ac1eb256737"
+      sha256: debb359675b81b6fde7d2482247921646f0513267bec9fc1caa4a0d8757d7e87
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.3"
+    version: "1.2.0"
   js:
     dependency: transitive
     description:
