@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:floating_toolbar/utilities/types.dart';
+import 'package:floating_toolbar/src/utilities/types.dart';
 
 double toolbarOffset({
   required ToolbarData toolbarData,

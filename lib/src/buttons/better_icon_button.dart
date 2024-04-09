@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:floating_toolbar/utilities/types.dart';
+import 'package:floating_toolbar/src/utilities/types.dart';
 import 'package:flutter/material.dart';
 
 class BetterIconButton extends StatelessWidget {
