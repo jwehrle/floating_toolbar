@@ -1,7 +1,6 @@
-import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:iconic_button/button.dart';
+import 'package:iconic_button/iconic_button.dart';
 
 /// Encapsulates parameters needed for CompositedTransformFollower on which
 /// [Popup] is based.

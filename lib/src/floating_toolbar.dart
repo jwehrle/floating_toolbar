@@ -1,7 +1,7 @@
 library floating_toolbar;
 
 import 'package:floating_toolbar/src/popup.dart';
-import 'package:iconic_button/button.dart';
+import 'package:iconic_button/iconic_button.dart';
 import 'package:flutter/material.dart';
 
 import 'items.dart';
