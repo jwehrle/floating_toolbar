@@ -1,15 +1,11 @@
-import 'package:collection_value_notifier/collection_value_notifier.dart';
 import 'package:floating_toolbar/toolbar.dart';
 import 'package:flutter/material.dart';
-import 'package:iconic_button/iconic_button.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp() : super();
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -31,7 +27,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<IconData> _iconList = [
+  String text = 'Blue';
+  List<IconData> iconList = [
     Icons.link,
     Icons.arrow_downward,
     Icons.looks,
@@ -43,7 +40,30 @@ class _MyHomePageState extends State<MyHomePage> {
     Icons.landscape,
   ];
 
-  Map<int, String> _numberNames = {
+  // play with these to change popup shape and size
+  final ButtonShape _popupButtonShape = ButtonShape.circle;
+  // for other shapes use width and height
+  final double _popupRadius = 20.0;
+
+  int colorIndex = 0;
+  ValueNotifier<Color> colorNotifier = ValueNotifier(Colors.blue);
+  List colors = [
+    Colors.blue,
+    Colors.red,
+    Colors.yellow,
+    Colors.indigo,
+    Colors.deepOrange,
+    Colors.amber,
+  ];
+  Map<Color, String> colorText = {
+    Colors.blue: 'Blue',
+    Colors.red: 'Red',
+    Colors.yellow: 'Yellow',
+    Colors.indigo: 'Indigo',
+    Colors.deepOrange: 'Deep Orange',
+    Colors.amber: 'Amber',
+  };
+  Map<int, String> numberNames = {
     0: 'One',
     1: 'Two',
     2: 'Three',
@@ -55,178 +75,26 @@ class _MyHomePageState extends State<MyHomePage> {
     8: 'Nine',
   };
 
-  int _reactiveIndex = 6;
-  bool _reactiveButtonSelected = false;
-  ButtonController _reactiveController = ButtonController();
-  List<ButtonController> _popupControllers = [];
-  int _loremIndex = 0;
-  List<FloatingToolbarItem> _primaryItems = [];
-  late EdgeInsets _margin;
-  final EdgeInsets _buttonContentPadding =
-      EdgeInsets.symmetric(horizontal: 8.0);
-  ValueNotifier<String?> _displayTextNotifier = ValueNotifier(null);
-
-  void _snack() {
-    String text = lorem[_loremIndex % lorem.length];
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-          SnackBar(
-            content: Text(text),
-            action: SnackBarAction(
-              label: 'OK',
-              onPressed: () =>
-                  ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-            ),
-          ),
-        )
-        .closed
-        .then((value) => setState(() => _loremIndex++));
-    _itemSelector.selected = null;
-  }
-
-  void _snackSelected() => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('You tapped the an enabled button and now it is selected'),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: () =>
-                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-          ),
-        ),
-      );
-
-  void _snackUnselected() => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('You tapped the an enabled button and now it is unselected'),
-          action: SnackBarAction(
-            label: 'OK',
-            onPressed: () =>
-                ScaffoldMessenger.of(context).hideCurrentSnackBar(),
-          ),
-        ),
-      );
-
-  void _enabledButtonOnPressed() {
-    _reactiveButtonSelected = !_reactiveButtonSelected;
-    print(_reactiveButtonSelected);
-    if (_reactiveButtonSelected) {
-      _snackSelected();
-    } else {
-      _snackUnselected();
-    }
-  }
-
-  FocusNode _focusNode = FocusNode();
-  ValueNotifier<bool> _hasFocus = ValueNotifier(false);
-  ItemSelector _itemSelector = ItemSelector();
-  Set<int> _hideIndices = {};
-
-  void _focusListener() {
-    _hasFocus.value = _focusNode.hasFocus;
-    setState(() {
-      _margin = _focusNode.hasFocus ? EdgeInsets.zero : EdgeInsets.all(4.0);
-    });
-  }
+  int customItemIndex = 2;
+  List<ToolbarItem> buttons = [];
+  Color background = Colors.blue;
+  Color accent = Colors.white;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(_focusListener);
-    _margin = EdgeInsets.all(4.0);
-    for (int index = 0; index < _iconList.length; index++) {
-      String label = _numberNames[index]!;
-      if (index == 0) {
-        _primaryItems.add(
-          FloatingToolbarItem.customButton(
-            ValueListenableBuilder<bool>(
-                valueListenable: _hasFocus,
-                builder: (context, value, _) {
-                  return AnimatedContainer(
-                    duration: Duration(milliseconds: 500),
-                    width: value ? 250.0 : 200.0,
-                    child: TextField(
-                      focusNode: _focusNode,
-                      onSubmitted: (value) {
-                        if (value.toLowerCase().contains('hide')) {
-                          setState(() => _hideIndices = {1});
-                        }
-                        if (value.toLowerCase().contains('show')) {
-                          setState(() => _hideIndices = {});
-                        }
-                      },
-                      onChanged: (text) => _displayTextNotifier.value = text,
-                      decoration: InputDecoration(
-                        hintText: '\"hide\" or \"show\"',
-                        fillColor: Colors.white,
-                        filled: true,
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                        // isCollapsed: true,
-                      ),
-                    ),
-                  );
-                }),
-          ),
-        );
-      } else if (index == _reactiveIndex) {
-        _primaryItems.add(
-          FloatingToolbarItem.buttonOnly(
-            item: IconicItem(
-              iconData: _iconList[index],
-              label: 'Diff',
-              tooltip: 'This is the enabled/disabled button',
-            ),
-            controller: _reactiveController,
-          ),
-        );
+
+    for (int index = 0; index < iconList.length; index++) {
+      if (index == customItemIndex) {
+        buttons.add(_noPopItem(index));
       } else {
-        int num = 2 + (index % (3));
-        List<PopupItemBuilder> popups = [];
-        for (int i = 0; i < num; i++) {
-          ButtonController ctl = ButtonController();
-          _popupControllers.add(ctl);
-          popups.add(
-            PopupItemBuilder(
-              controller: ctl,
-              builder: (context, state, child) {
-                ThemeData theme = Theme.of(context);
-                return BaseIconicButton(
-                  isEnabled: state.contains(ButtonState.enabled),
-                  isSelected: state.contains(ButtonState.selected),
-                  iconData: Icons.tag_faces,
-                  elevation: 4.0,
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(8.0),
-                  primary: theme.primaryColor,
-                  onPrimary: theme.colorScheme.onPrimary,
-                  onSurface: theme.colorScheme.onSurface,
-                  onPressed: _snack,
-                  preferTooltipBelow: false,
-                  tooltip: 'Popup tooltip!',
-                );
-              },
-            ),
-          );
-        }
-        _primaryItems.add(
-          FloatingToolbarItem.buttonWithPopups(
-            item: IconicItem(
-              iconData: _iconList[index],
-              label: label,
-              tooltip: 'This is $label',
-            ),
-            popups: popups,
-          ),
-        );
+        buttons.add(_popItem(index, background, accent));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -235,68 +103,28 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Stack(
           children: [
             Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: ValueListenableBuilder<String?>(
-                        valueListenable: _displayTextNotifier,
-                        builder: (context, value, _) {
-                          if (value?.contains('hide') ?? false) {
-                            value = 'Hiding $_hideIndices';
-                          }
-                          if (value?.contains('show') ?? false) {
-                            value = 'Showing all indicies';
-                          }
-                          return Text(value ?? 'Enter text in toolbar');
-                        }),
-                  ),
-                  Padding(padding: EdgeInsets.only(bottom: 16.0)),
-                  SetListenableBuilder<ButtonState>(
-                      valueListenable: _reactiveController,
-                      builder: (context, state, _) {
-                        return SwitchListTile.adaptive(
-                          title: Text('Enable/Disable Button'),
-                          subtitle: Text(
-                              'Scroll to find the button that says Enable'),
-                          value: state.contains(ButtonState.enabled),
-                          onChanged: (value) {
-                            if (_reactiveController.isEnabled) {
-                              _reactiveController.disable();
-                            } else {
-                              _reactiveController.enable();
-                            }
-                          },
-                        );
-                      }),
-                ],
-              ),
+              child: Text(text),
             ),
             FloatingToolbar(
-              items: _primaryItems,
-              toolbarStyle: ToolbarStyle.bottomCenterHorizontal(
-                margin: _margin,
-                backgroundColor: theme.primaryColor,
+              data: ToolbarData(
+                backgroundColor: background,
+                alignment: ToolbarAlignment.bottomCenterHorizontal,
+                margin: EdgeInsets.all(4.0),
+                contentPadding: EdgeInsets.all(4.0),
+                popupSpacing: 4.0,
+                buttonSpacing: 4.0,
+                buttonSize: Size(45.0, 40.0),
               ),
-              toolbarButtonStyle: ToolbarButtonStyle(
-                padding: _buttonContentPadding,
-                preferTooltipBelow: false,
-                equalizedSize: findEqualizedSize(
-                  context: context,
-                  items: _primaryItems,
-                  textStyle: theme.textTheme.labelSmall,
-                  padding: _buttonContentPadding,
-                ),
-              ),
-              onValueChanged: (index) {
-                if (index == 6) {
-                  _enabledButtonOnPressed();
+              onPressed: (key) => setState(() {
+                print(key);
+                if (key == customItemIndex.toString()) {
+                  colorIndex = (colorIndex + 1) % colors.length;
+                  Color color = colors[colorIndex];
+                  colorNotifier.value = color;
+                  text = colorText[color] ?? 'Whoops';
                 }
-              },
-              itemSelector: _itemSelector,
-              barrier: ToolbarBarrier(),
-              hide: _hideIndices,
+              }),
+              items: buttons,
             ),
           ],
         ),
@@ -304,16 +132,120 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  @override
-  void dispose() {
-    _popupControllers.forEach((element) => element.dispose());
-    _reactiveController.dispose();
-    _displayTextNotifier.dispose();
-    _focusNode.removeListener(_focusListener);
-    _focusNode.dispose();
-    _hasFocus.dispose();
-    _itemSelector.dispose();
-    super.dispose();
+  ToolbarItem _noPopItem(int index) {
+    return ToolbarItem.noPop(
+      itemKey: index.toString(),
+      selectableButtonBuilder: (data) => _selectableButton(index, data),
+    );
+  }
+
+  SelectableButton _selectableButton(index, data) {
+    return SelectableButton(
+      data: data,
+      unselectedButton: ValueListenableBuilder<Color>(
+        valueListenable: colorNotifier,
+        builder: (context, color, _) {
+          String label = numberNames[index]!;
+          return ButtonTile(
+            iconData: iconList[index],
+            label: label,
+            backgroundColor: color,
+            decorationColor: color,
+            foregroundColor: Colors.white,
+            tooltip: 'This is $label',
+          );
+        },
+      ),
+    );
+  }
+
+  ToolbarItem _popItem(int index, Color background, Color accent) {
+    return ToolbarItem.pop(
+      itemKey: index.toString(),
+      popupButtonBuilder: (data) => _popupButton(
+        index,
+        data,
+        background,
+        accent,
+      ),
+      popupListBuilder: (data) => _popupList(
+        index,
+        data,
+        background,
+        accent,
+      ),
+    );
+  }
+
+  PopupButton _popupButton(int index, data, background, accent) {
+    IconData iconData = iconList[index];
+    String label = numberNames[index]!;
+    return PopupButton(
+      data: data,
+      unselectedButton: ButtonTile(
+        iconData: iconData,
+        label: label,
+        backgroundColor: background,
+        decorationColor: background,
+        foregroundColor: accent,
+        tooltip: 'This is $label',
+      ),
+      selectedButton: ButtonTile(
+        iconData: iconData,
+        label: label,
+        backgroundColor: background,
+        decorationColor: accent,
+        foregroundColor: background,
+        tooltip: 'This is $label',
+      ),
+    );
+  }
+
+  PopupList _popupList(int index, data, background, accent) {
+    int num = 2 + (index % (3));
+    List<Widget> buttons = [];
+    for (int i = 0; i < num; i++) {
+      buttons.add(_popup(background, accent));
+    }
+    return PopupList(
+      data: data,
+      buttons: buttons,
+    );
+  }
+
+  int _loremIndex = 0;
+
+  Widget _popup(Color background, Color accent) {
+    return GestureDetector(
+      onTap: () {
+        String text = lorem[_loremIndex % lorem.length];
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
+              SnackBar(
+                content: Text(text),
+                action: SnackBarAction(
+                  label: 'OK',
+                  onPressed: () =>
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+                ),
+              ),
+            )
+            .closed
+            .then((value) => setState(() => _loremIndex++));
+      },
+      child: ButtonTile(
+        iconData: Icons.tag_faces,
+        buttonShape: _popupButtonShape,
+        radius: _popupRadius,
+        backgroundColor: background,
+        decorationColor: background,
+        foregroundColor: accent,
+        tooltip: 'This is a popup button!',
+        preferTooltipBelow: false,
+        isMaterialized: true,
+        elevation: 2.0,
+      ),
+    );
   }
 }
 
